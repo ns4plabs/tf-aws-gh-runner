@@ -1,0 +1,13 @@
+name: Playground
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    name: Run
+    runs-on: [self-hosted, linux, x64, default, example]
+    steps:
+      - name: Exec
+        run: pwd && ls
+        shell: bash
