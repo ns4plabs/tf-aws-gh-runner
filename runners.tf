@@ -25,7 +25,7 @@ module "linux" {
 
   enable_organization_runners = true
   runner_extra_labels         = join(",", ["default", "example"])
-  runner_enable_workflow_job_labels_check = true
+  # runner_enable_workflow_job_labels_check = true
 
   enable_ssm_on_runners = true
 
