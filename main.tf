@@ -49,6 +49,13 @@ module "vpc" {
   map_public_ip_on_launch = false
   single_nat_gateway      = true
 
+  enable_ipv6                     = true
+  assign_ipv6_address_on_creation = true
+
+  public_subnet_ipv6_prefixes   = [0, 1, 2]
+  private_subnet_ipv6_prefixes  = [3, 4, 5]
+  database_subnet_ipv6_prefixes = [6, 7, 8]
+
   tags = {
     Name = "Terraform AWS GitHub Runner"
     Url  = "https://github.com/pl-strflt/tf-aws-gh-runner"

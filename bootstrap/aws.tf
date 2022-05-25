@@ -74,7 +74,8 @@ data "aws_iam_policy_document" "this" {
       "apigateway:*",
       "resource-groups:*",
       "kms:*",
-      "dynamodb:*"
+      "dynamodb:*",
+      "elasticloadbalancing:*"
     ]
     resources = ["*"]
     effect = "Allow"
