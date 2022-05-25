@@ -1,4 +1,8 @@
-module "linux" {
+module "runners" {
+  for_each = {
+    "linux" = {}
+  }
+
   source                          = "philips-labs/github-runner/aws"
   version                         = "1.2.0"
   aws_region                      = data.aws_region.default.name

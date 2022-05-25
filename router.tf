@@ -69,7 +69,7 @@ resource "aws_lb" "webhook_router" {
 resource "aws_lambda_permission" "webhook_router" {
   statement_id  = "AllowExecutionFromALB"
   action        = "lambda:InvokeFunction"
-  function_name = module.linux.webhook.lambda.function_name
+  function_name = module.runners["linux"].webhook.lambda.function_name
   principal     = "elasticloadbalancing.amazonaws.com"
   source_arn    = aws_alb_target_group.webhook_router.arn
 }
@@ -96,6 +96,6 @@ resource "aws_alb_target_group" "webhook_router" {
 
 resource "aws_alb_target_group_attachment" "webhook_router" {
   target_group_arn = aws_alb_target_group.webhook_router.arn
-  target_id        = module.linux.webhook.lambda.arn
+  target_id        = module.runners["linux"].webhook.lambda.arn
   depends_on       = [aws_lambda_permission.webhook_router]
 }

@@ -61,13 +61,3 @@ module "vpc" {
     Url  = "https://github.com/pl-strflt/tf-aws-gh-runner"
   }
 }
-
-output "runners" {
-  value = {
-    lambda_syncer_name = module.linux.binaries_syncer.lambda.function_name
-  }
-}
-
-output "webhook_endpoint" {
-  value = module.linux.webhook.endpoint
-}
