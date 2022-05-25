@@ -52,6 +52,7 @@ resource "aws_apigatewayv2_integration" "webhook_router" {
   integration_uri    =  aws_alb_listener.webhook_router.arn
 
   request_parameters = {
+    # module.runners["linux"].webhook.lambda.environment[0].variables.RUNNER_LABELS
     "overwrite:header.x-github-workflow_job-labels" = "$request.body.workflow_job.labels"
   }
 }
