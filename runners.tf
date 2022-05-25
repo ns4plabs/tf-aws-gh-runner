@@ -24,8 +24,8 @@ module "linux" {
   runner_os = "linux"
 
   enable_organization_runners = true
-  runner_extra_labels         = join(",", ["default", "example"])
-  # runner_enable_workflow_job_labels_check = true
+  runner_extra_labels         = join(",", ["linux"])
+  runner_enable_workflow_job_labels_check = true
 
   enable_ssm_on_runners = true
 
@@ -38,4 +38,6 @@ module "linux" {
   enable_ephemeral_runners = true
 
   log_level = "debug"
+
+  repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
 }
