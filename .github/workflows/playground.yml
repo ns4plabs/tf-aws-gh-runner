@@ -6,7 +6,7 @@ on:
 jobs:
   run:
     name: Run
-    runs-on: [self-hosted, linux, x64, large-linux-runner]
+    runs-on: [self-hosted, windows, x64, large-windows-runner]
     steps:
       - name: Exec
         run: pwd && ls
