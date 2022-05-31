@@ -23,6 +23,13 @@ terraform {
   required_version = "~> 1.1.4"
 }
 
+locals {
+  tags = {
+    Name = "Terraform AWS GitHub Runner"
+    Url  = "https://github.com/pl-strflt/tf-aws-gh-runner"
+  }
+}
+
 provider "aws" {}
 
 variable "github_app_key_base64" {}

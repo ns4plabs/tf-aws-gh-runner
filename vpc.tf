@@ -21,8 +21,5 @@ module "vpc" {
   private_subnet_ipv6_prefixes  = [3, 4, 5]
   database_subnet_ipv6_prefixes = [6, 7, 8]
 
-  tags = {
-    Name = "Terraform AWS GitHub Runner"
-    Url  = "https://github.com/pl-strflt/tf-aws-gh-runner"
-  }
+  tags = local.tags
 }
