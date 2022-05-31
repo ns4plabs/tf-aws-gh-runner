@@ -4,7 +4,7 @@ module "runners" {
       os = "linux"
       architecture = "x64"
       instance_types = ["m5.large", "c5.large"]
-      repository_allowlist = ["pl-strflt/tf-aws-gh-runner"]
+      repository_allowlist = ["pl-strflt/tf-aws-gh-runner", "singulargarden/pl-github"]
       max_count = 10
     }
     "large-windows-runner" = {
