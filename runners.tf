@@ -14,6 +14,15 @@ module "runners" {
       repository_allowlist = ["pl-strflt/tf-aws-gh-runner"]
       max_count = 10
     }
+    "large-ubuntu-runner" = {
+      os = "linux"
+      architecture = "x64"
+      instance_types = ["m5.large", "c5.large"]
+      repository_allowlist = ["pl-strflt/tf-aws-gh-runner", "singulargarden/pl-github"]
+      ami_filter = { name = ["github-runner-ubuntu-focal-amd64-202206021348-testground"] }
+      ami_owners  = ["909427826938"]
+      max_count = 10
+    }
   }
 
   source                          = "philips-labs/github-runner/aws"
@@ -37,6 +46,9 @@ module "runners" {
 
   runner_os = each.value.os
   runner_architecture = each.value.architecture
+
+  ami_filter =  lookup(each.value, "ami_filter", null)
+  ami_owners = lookup(each.value, "ami_owners", null)
 
   enable_organization_runners = true
   runner_extra_labels         = join(",", [each.key])
