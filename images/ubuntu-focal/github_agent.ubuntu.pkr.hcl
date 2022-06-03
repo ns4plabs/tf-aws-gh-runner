@@ -7,57 +7,10 @@ packer {
   }
 }
 
-variable "runner_version" {
-  description = "The version (no v prefix) of the runner software to install https://github.com/actions/runner/releases"
-  type        = string
-  default     = "2.286.1"
-}
-
 variable "name_suffix" {
   description = "The suffix to append to the name of the runner"
   type        = string
   default     = "basic"
-}
-
-variable "region" {
-  description = "The region to build the image in"
-  type        = string
-  default     = "eu-west-1"
-}
-
-variable "security_group_id" {
-  description = "The ID of the security group Packer will associate with the builder to enable access"
-  type        = string
-  default     = null
-}
-
-variable "subnet_id" {
-  description = "If using VPC, the ID of the subnet, such as subnet-12345def, where Packer will launch the EC2 instance. This field is required if you are using an non-default VPC"
-  type        = string
-  default     = null
-}
-
-variable "associate_public_ip_address" {
-  description = "If using a non-default VPC, there is no public IP address assigned to the EC2 instance. If you specified a public subnet, you probably want to set this to true. Otherwise the EC2 instance won't have access to the internet"
-  type        = string
-  default     = null
-}
-
-variable "instance_type" {
-  description = "The instance type Packer will use for the builder"
-  type        = string
-  default     = "t3.medium"
-}
-
-variable "root_volume_size_gb" {
-  type    = number
-  default = 8
-}
-
-variable "ebs_delete_on_termination" {
-  description = "Indicates whether the EBS volume is deleted on instance termination."
-  type        = bool
-  default     = true
 }
 
 variable "global_tags" {
@@ -98,11 +51,8 @@ source "amazon-ebs" "githubrunner" {
     formatdate("YYYYMMDDhhmm", timestamp()),
     var.name_suffix
   ])
-  instance_type               = var.instance_type
-  region                      = var.region
-  security_group_id           = var.security_group_id
-  subnet_id                   = var.subnet_id
-  associate_public_ip_address = var.associate_public_ip_address
+  instance_type               = "t3.medium"
+  region                      = "us-east-1"
 
   source_ami_filter {
     filters = {
@@ -129,9 +79,9 @@ source "amazon-ebs" "githubrunner" {
 
   launch_block_device_mappings {
     device_name           = "/dev/sda1"
-    volume_size           = "${var.root_volume_size_gb}"
+    volume_size           = "30"
     volume_type           = "gp3"
-    delete_on_termination = "${var.ebs_delete_on_termination}"
+    delete_on_termination = "true"
   }
 }
 
@@ -165,18 +115,16 @@ build {
 
   provisioner "file" {
     content = templatefile("../install-runner.sh", {
-      install_runner = templatefile("../../modules/runners/templates/install-runner.sh", {
-        ARM_PATCH                       = ""
-        S3_LOCATION_RUNNER_DISTRIBUTION = ""
-        RUNNER_ARCHITECTURE             = "x64"
-      })
+      ARM_PATCH                       = ""
+      S3_LOCATION_RUNNER_DISTRIBUTION = ""
+      RUNNER_ARCHITECTURE             = "x64"
     })
     destination = "/tmp/install-runner.sh"
   }
 
   provisioner "shell" {
     environment_vars = [
-      "RUNNER_TARBALL_URL=https://github.com/actions/runner/releases/download/v${var.runner_version}/actions-runner-linux-x64-${var.runner_version}.tar.gz"
+      "RUNNER_TARBALL_URL=https://github.com/actions/runner/releases/download/v2.286.1/actions-runner-linux-x64-2.286.1.tar.gz"
     ]
     inline = [
       "sudo chmod +x /tmp/install-runner.sh",
@@ -187,9 +135,7 @@ build {
   }
 
   provisioner "file" {
-    content = templatefile("../start-runner.sh", {
-      start_runner = templatefile("../../modules/runners/templates/start-runner.sh", {})
-    })
+    content = templatefile("../start-runner.sh", {})
     destination = "/tmp/start-runner.sh"
   }
 

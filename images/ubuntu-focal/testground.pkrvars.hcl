@@ -15,5 +15,4 @@ post_install_custom_shell_commands = [
   "make install",
 ]
 
-root_volume_size_gb = 16
 name_suffix = "testground"
