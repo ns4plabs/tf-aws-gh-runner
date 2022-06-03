@@ -48,7 +48,7 @@ module "runners" {
   runner_architecture = each.value.architecture
 
   ami_filter =  lookup(each.value, "ami_filter", null)
-  ami_owners = lookup(each.value, "ami_owners", null)
+  ami_owners = lookup(each.value, "ami_owners", ["amazon"])
 
   enable_organization_runners = true
   runner_extra_labels         = join(",", [each.key])
