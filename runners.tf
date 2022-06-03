@@ -21,6 +21,7 @@ module "runners" {
       repository_allowlist = ["pl-strflt/tf-aws-gh-runner", "singulargarden/pl-github"]
       ami_filter = { name = ["github-runner-ubuntu-focal-amd64-202206031118-testground"] }
       ami_owners  = ["642361402189"]
+      enabled_userdata = false
       max_count = 10
     }
   }
@@ -49,6 +50,7 @@ module "runners" {
 
   ami_filter = lookup(each.value, "ami_filter", null)
   ami_owners = lookup(each.value, "ami_owners", ["amazon"])
+  enabled_userdata = lookup(each.value, "enabled_userdata", true)
 
   enable_organization_runners = true
   runner_extra_labels         = join(",", [each.key])
