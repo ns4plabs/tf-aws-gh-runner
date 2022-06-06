@@ -26,8 +26,8 @@ Firstly, please read what GitHub says about the [security implications of using 
 To mitigate the danger of persisting unwanted or dangerous data on the machine, this repository allows defining ephemeral runners only. Each runner is torn down after executing a single workflow.
 
 To further protect yourself against untrusted code execution, you might also want to consider the following:
-- [always requiring approval to execute workflows for all outside collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#configuring-required-approval-for-workflows-from-public-forks)
-- [restricting the workflows which are allowed to use self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/managing-access-to-self-hosted-runners-using-groups)
+- [always requiring approval to execute workflows for all outside collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#controlling-changes-from-forks-to-workflows-in-public-repositories)
+- [restricting the workflows which are allowed to use self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/managing-access-to-self-hosted-runners-using-groups#changing-the-access-policy-of-a-self-hosted-runner-group)
 
 ### How to add a new runner type?
 
