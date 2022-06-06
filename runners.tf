@@ -37,7 +37,7 @@ module "runners" {
         volume_type           = "io2"
         volume_size           = 100
         encrypted             = true
-        iops                  = null
+        iops                  = 16000
       }]
     }
   }
