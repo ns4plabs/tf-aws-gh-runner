@@ -6,9 +6,9 @@ This project uses [terraform-aws-github-runner](https://github.com/philips-labs/
 
 | Name | OS | Architecture | Instance Type | AMI |
 | --- | --- | --- | --- | --- |
-| linux-x64-default | linux | x64 | [m5.large]([m5.2xlarge](https://instances.vantage.sh/?selected=m5.large)) | `amzn2-ami-kernel-5.*-hvm-*-x86_64-gp2` by Amazon |
-| windows-x64-default | linux | x64 | [m5.large]([m5.2xlarge](https://instances.vantage.sh/?selected=m5.large)) | `Windows_Server-20H2-English-Core-ContainersLatest-*` by Amazon |
-| linux-arm64-default | linux | arm64 | [m6g.large]([m6g.2xlarge](https://instances.vantage.sh/?selected=m6g.large)) | `amzn2-ami-kernel-5.*-hvm-*-arm64-gp2` by Amazon |
+| linux-x64-default | linux | x64 | [m5.large](https://instances.vantage.sh/?selected=m5.large) | `amzn2-ami-kernel-5.*-hvm-*-x86_64-gp2` by Amazon |
+| windows-x64-default | linux | x64 | [m5.large](https://instances.vantage.sh/?selected=m5.large) | `Windows_Server-20H2-English-Core-ContainersLatest-*` by Amazon |
+| linux-arm64-default | linux | arm64 | [m6g.large](https://instances.vantage.sh/?selected=m6g.large) | `amzn2-ami-kernel-5.*-hvm-*-arm64-gp2` by Amazon |
 | testground | linux | x64 | [m5.2xlarge](https://instances.vantage.sh/?selected=m5.2xlarge) | `github-runner-ubuntu-focal-amd64-202206031118-testground` built with [testground.pkrvars](images/ubuntu-focal/testground.pkrvars.hcl) |
 
 ## Usage
