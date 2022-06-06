@@ -19,7 +19,15 @@ This project uses [terraform-aws-github-runner](https://github.com/philips-labs/
 1. Ensure [pl-strflt/tf-aws-gh-runner](https://github.com/apps/pl-strflt-tf-aws-gh-runner) GitHub App is installed in your organization.
 1. Request the self-hosted runner in your workflow through `job.runs-on` parameter. E.g. `runs-on: [self-hosted, linux, x64, linux-x64-default]`, `runs-on: [self-hosted, windows, x64, windows-x64-default]`.
 
-**IMPORTANT**: Please read what the [security implications of using self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners#self-hosted-runner-security) are. If you [enable self-hosted runners in public repositories](https://docs.github.com/en/actions/hosting-your-own-runners/managing-access-to-self-hosted-runners-using-groups), we suggest you also [restrict the workflows allowed to use self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/managing-access-to-self-hosted-runners-using-groups) and think carefully about implications of executing untrusted code. It might also be a good idea to [require approval for all outside collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#configuring-required-approval-for-workflows-from-public-forks).
+#### Is it secure to use self-hosted runners in public repositories?
+
+Firstly, please read what GitHub says about the [security implications of using self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners#self-hosted-runner-security) in public repositories.
+
+To mitigate the danger of persisting unwanted or dangerous data on the machine, this repository allows defining ephemeral runners only. Each runner is torn down after executing a single workflow.
+
+To further protect yourself against untrusted code execution, you might also want to consider the following:
+- [always requiring approval to execute workflows for all outside collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#configuring-required-approval-for-workflows-from-public-forks)
+- [restricting the workflows which are allowed to use self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/managing-access-to-self-hosted-runners-using-groups)
 
 ### How to add a new runner type?
 
