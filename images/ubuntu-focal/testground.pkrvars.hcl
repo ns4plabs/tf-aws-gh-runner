@@ -1,3 +1,7 @@
+# Ubuntu based AMI with docker, go 1.18 and testground preinstalled
+# To build, run:
+#   packer build -var-file="./testground.pkrvars.hcl" .
+
 custom_shell_commands = [
   "curl -OL https://golang.org/dl/go1.18.3.linux-amd64.tar.gz",
   "sudo tar -C /usr/local -xzf go1.18.3.linux-amd64.tar.gz",

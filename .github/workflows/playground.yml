@@ -4,10 +4,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  run:
+  run1:
     name: Run
-    runs-on: [self-hosted, windows, x64, large-windows-runner]
+    runs-on: [self-hosted, linux, arm64, linux-arm64-default]
     steps:
-      - name: Exec
-        run: pwd && ls
+      - name: Show architecture
+        run: uname -m
+        shell: bash
+  run2:
+    name: Run
+    runs-on: [self-hosted, linux, x64, testground]
+    steps:
+      - name: Show partitions
+        run: df -h
         shell: bash
