@@ -18,7 +18,7 @@ module "runners" {
       runner_os = "linux"
       runner_architecture = "arm64"
       instance_types = ["m6g.large"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galargh/ref-fvm"]
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/ref-fvm"]
       runners_maximum_count = 10
     }
     "testground" = {
