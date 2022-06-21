@@ -24,7 +24,7 @@ module "runners" {
     "testground" = {
       runner_os = "linux"
       runner_architecture = "x64"
-      instance_types = ["m5.2xlarge"]
+      instance_types = ["m5.2xlarge", "t3.2xlarge"]
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "singulargarden/pl-github"]
       ami_filter = { name = ["github-runner-ubuntu-focal-amd64-202206031118-testground"] }
       ami_owners  = ["642361402189"]
