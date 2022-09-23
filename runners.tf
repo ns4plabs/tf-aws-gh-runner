@@ -38,12 +38,15 @@ module "runners" {
         volume_size           = 100
         encrypted             = true
         iops                  = 16000
+        throughput            = null
+        kms_key_id            = null
+        snapshot_id           = null
       }]
     }
   }
 
   source                          = "philips-labs/github-runner/aws"
-  version                         = "1.2.0"
+  version                         = "1.9.1"
   aws_region                      = data.aws_region.default.name
   vpc_id                          = module.vpc.vpc_id
   subnet_ids                      = module.vpc.private_subnets
@@ -75,6 +78,9 @@ module "runners" {
     volume_size           = 30
     encrypted             = true
     iops                  = null
+    throughput            = null
+    kms_key_id            = null
+    snapshot_id           = null
   }])
 
   enable_organization_runners = true

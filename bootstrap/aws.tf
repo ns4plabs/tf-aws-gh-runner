@@ -91,19 +91,19 @@ resource "aws_iam_user_policy" "this" {
 
 module "github-runner_download-lambda" {
   source  = "philips-labs/github-runner/aws//modules/download-lambda"
-  version = "1.2.0"
+  version = "1.9.1"
   lambdas = [
     {
       name = "webhook"
-      tag  = "v1.2.0"
+      tag  = "v1.9.1"
     },
     {
       name = "runners"
-      tag  = "v1.2.0"
+      tag  = "v1.9.1"
     },
     {
       name = "runner-binaries-syncer"
-      tag  = "v1.2.0"
+      tag  = "v1.9.1"
     }
   ]
 }
