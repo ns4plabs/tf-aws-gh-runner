@@ -49,6 +49,7 @@ module "runners" {
       instance_types = ["m5.4xlarge"]
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo"]
       runners_maximum_count = 20
+      instance_target_capacity_type = "on-demand"
     }
   }
 
@@ -97,6 +98,7 @@ module "runners" {
   enable_ssm_on_runners = true
 
   instance_types = each.value.instance_types
+  instance_target_capacity_type = lookup(each.value, "instance_target_capacity_type", "spot")
 
   minimum_running_time_in_minutes = each.value.runner_os == "windows" ? 30 : 10
   delay_webhook_event = 0
