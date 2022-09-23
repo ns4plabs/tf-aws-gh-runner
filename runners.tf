@@ -43,6 +43,13 @@ module "runners" {
         snapshot_id           = null
       }]
     }
+    "kubo" = {
+      runner_os = "linux"
+      runner_architecture = "x64"
+      instance_types = ["m5.4xlarge"]
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo"]
+      runners_maximum_count = 20
+    }
   }
 
   source                          = "philips-labs/github-runner/aws"
