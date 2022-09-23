@@ -4,17 +4,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  run1:
+  run:
     name: Run
-    runs-on: [self-hosted, linux, arm64, linux-arm64-default]
+    runs-on: [self-hosted, linux, x64, kubo]
     steps:
-      - name: Show architecture
-        run: uname -m
-        shell: bash
-  run2:
-    name: Run
-    runs-on: [self-hosted, linux, x64, testground]
-    steps:
-      - name: Show partitions
-        run: df -h
+      - run: echo 'Hello World!'
         shell: bash
