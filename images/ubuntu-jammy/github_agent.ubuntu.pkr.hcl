@@ -46,7 +46,7 @@ variable "post_install_custom_shell_commands" {
 source "amazon-ebs" "githubrunner" {
   ami_name                    = join("-", [
     "github-runner",
-    "ubuntu-focal",
+    "ubuntu-jammy",
     "amd64",
     formatdate("YYYYMMDDhhmm", timestamp()),
     var.name_suffix
@@ -56,7 +56,7 @@ source "amazon-ebs" "githubrunner" {
 
   source_ami_filter {
     filters = {
-      name                = "*ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
+      name                = "*ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }
@@ -64,11 +64,13 @@ source "amazon-ebs" "githubrunner" {
     owners      = ["099720109477"]
   }
   ssh_username = "ubuntu"
+  # https://github.com/hashicorp/packer/issues/11733
+  temporary_key_pair_type = "ed25519"
   tags = merge(
     var.global_tags,
     var.ami_tags,
     {
-      OS_Version    = "ubuntu-focal"
+      OS_Version    = "ubuntu-jammy"
       Release       = "Latest"
       Base_AMI_Name = "{{ .SourceAMIName }}"
   })
@@ -124,13 +126,13 @@ build {
 
   provisioner "shell" {
     environment_vars = [
-      "RUNNER_TARBALL_URL=https://github.com/actions/runner/releases/download/v2.286.1/actions-runner-linux-x64-2.286.1.tar.gz"
+      "RUNNER_TARBALL_URL=https://github.com/actions/runner/releases/download/v2.294.0/actions-runner-linux-x64-2.294.0.tar.gz"
     ]
     inline = [
       "sudo chmod +x /tmp/install-runner.sh",
       "echo ubuntu | tee -a /tmp/install-user.txt",
       "sudo RUNNER_ARCHITECTURE=x64 RUNNER_TARBALL_URL=$RUNNER_TARBALL_URL /tmp/install-runner.sh",
-      "echo ImageOS=ubuntu20 | tee -a /opt/actions-runner/.env"
+      "echo ImageOS=ubuntu22 | tee -a /opt/actions-runner/.env"
     ]
   }
 
