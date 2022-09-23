@@ -50,7 +50,7 @@ module "runners" {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202209231527-kubo"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202209231620-kubo"] }
       ami_owners = ["642361402189"]
       enabled_userdata = false
       runner_run_as = "ubuntu"
