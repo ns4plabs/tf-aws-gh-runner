@@ -26,7 +26,7 @@ module "runners" {
       runner_architecture = "x64"
       instance_types = ["m5.2xlarge", "t3.2xlarge"]
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "singulargarden/pl-github"]
-      ami_filter = { name = ["github-runner-ubuntu-focal-amd64-202206031118-testground"] }
+      ami_filter = { name = ["github-runner-ubuntu-focal-amd64-202209231503-testground"] }
       ami_owners  = ["642361402189"]
       enabled_userdata = false
       runner_run_as = "ubuntu"
@@ -50,6 +50,21 @@ module "runners" {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202209291154-kubo"] }
+      ami_owners = ["642361402189"]
+      enabled_userdata = false
+      runner_run_as = "ubuntu"
+      block_device_mappings = [{
+        device_name           = "/dev/sda1"
+        delete_on_termination = true
+        volume_type           = "gp3"
+        volume_size           = 30
+        encrypted             = true
+        iops                  = null
+        throughput            = null
+        kms_key_id            = null
+        snapshot_id           = null
+      }]
     }
   }
 
