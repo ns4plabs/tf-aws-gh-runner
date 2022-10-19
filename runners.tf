@@ -48,7 +48,7 @@ module "runners" {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["m5.4xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo"]
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo", "ipfs/kubo"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202210191043-kubo"] }
