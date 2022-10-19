@@ -40,5 +40,5 @@ runs:
 
         await exec.exec(`aws s3 cp ${source} s3://${bucket}/${destinationFullPath} ${recursiveOption} --acl public-read`)
 
-        return `https://${bucket}.amazonaws.com/${destinationFullPath}`
+        return `https://${bucket}.s3.amazonaws.com/${destinationFullPath}`
       result-encoding: string
