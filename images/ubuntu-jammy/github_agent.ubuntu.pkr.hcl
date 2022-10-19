@@ -43,6 +43,12 @@ variable "post_install_custom_shell_commands" {
   default     = []
 }
 
+variable "runner_version" {
+  description = "The version (no v prefix) of the runner software to install https://github.com/actions/runner/releases"
+  type        = string
+  default     = "2.298.2"
+}
+
 source "amazon-ebs" "githubrunner" {
   ami_name                    = join("-", [
     "github-runner",
@@ -126,7 +132,7 @@ build {
 
   provisioner "shell" {
     environment_vars = [
-      "RUNNER_TARBALL_URL=https://github.com/actions/runner/releases/download/v2.294.0/actions-runner-linux-x64-2.294.0.tar.gz"
+      "RUNNER_TARBALL_URL=https://github.com/actions/runner/releases/download/v${var.runner_version}/actions-runner-linux-x64-${var.runner_version}.tar.gz"
     ]
     inline = [
       "sudo chmod +x /tmp/install-runner.sh",
