@@ -1,0 +1,44 @@
+name: Upload Artifact
+description: Upload artifact to S3
+inputs:
+  source:
+    description: 'A file or directory to upload'
+    required: true
+  destination:
+    description: 'A file or directory (must end with /) to upload to'
+    required: false
+outputs:
+  url:
+    description: 'The URL of the uploaded file or directory'
+    value: ${{ steps.upload.outputs.result }}
+runs:
+  using: composite
+  steps:
+  - id: upload
+    uses: actions/github-script@v6
+    env:
+      INPUTS_SOURCE: ${{ inputs.source }}
+      INPUTS_DESTINATION: ${{ inputs.destination }}
+    with:
+      script: |
+        const fs = require('fs');
+        const path = require('path');
+
+        const callerIdentity = await exec.getExecOutput('aws sts get-caller-identity');
+        const arn = JSON.parse(callerIdentity.stdout).Arn;
+        const prefix = arn.match(/\/(.+)-runner-role\//)[1];
+
+        const source = process.env.INPUTS_SOURCE;
+        const destination = process.env.INPUTS_DESTINATION || source;
+
+        const sourceStats = fs.lstatSync(source);
+        const destinationPath = sourceStats.isFile() && destination.endsWith('/') ? `${destination}/path.basename(source)` : destination
+        const destinationFullPath = `${prefix}/${process.env.GITHUB_REPOSITORY}/${process.env.GITHUB_RUN_ID}/${process.env.GITHUB_RUN_ATTEMPT}/${destinationPath}`
+        const recursiveOption = fs.lstatSync(source).isDirectory() ? '--recursive' : '';
+
+        const bucket = 'tf-aws-gh-runner'
+
+        await exec.exec(`aws s3 cp ${source} s3://${bucket}/${destinationFullPath} ${recursiveOption} --acl public-read`)
+
+        return `https://${bucket}/${destinationFullPath}`
+      result-encoding: string
