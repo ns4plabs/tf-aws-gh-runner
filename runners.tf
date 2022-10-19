@@ -55,6 +55,7 @@ module "runners" {
       ami_owners = ["642361402189"]
       enabled_userdata = false
       enable_runner_binaries_syncer = false
+      enable_runner_detailed_monitoring = true
       runner_run_as = "ubuntu"
       block_device_mappings = [{
         device_name           = "/dev/sda1"
@@ -62,7 +63,7 @@ module "runners" {
         volume_type           = "gp3"
         volume_size           = 100
         encrypted             = true
-        iops                  = null
+        iops                  = 6000
         throughput            = null
         kms_key_id            = null
         snapshot_id           = null
@@ -108,6 +109,8 @@ module "runners" {
     kms_key_id            = null
     snapshot_id           = null
   }])
+
+  enable_runner_detailed_monitoring = lookup(each.value, "enable_runner_detailed_monitoring", false)
 
   enable_organization_runners = true
   runner_extra_labels         = join(",", [each.key])
