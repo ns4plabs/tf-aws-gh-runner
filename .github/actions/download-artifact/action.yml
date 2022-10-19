@@ -1,0 +1,39 @@
+name: Download Artifact
+description: Download artifact from S3
+inputs:
+  source:
+    description: 'A file or directory (must end with /) to download'
+    required: true
+  destination:
+    description: 'A file or directory to download to'
+    required: false
+outputs:
+  path:
+    description: 'The path of the downloaded file or directory'
+    value: ${{ steps.download.outputs.result }}
+runs:
+  using: composite
+  steps:
+  - id: download
+    uses: actions/github-script@v6
+    with:
+      script: |
+        const fs = require('fs');
+        const path = require('path');
+
+        const callerIdentity = await exec.exec('aws sts get-caller-identity');
+        const arn = JSON.parse(callerIdentity).Arn;
+        const prefix = arn.match(/\/(.+)-runner-role\//)[1];
+
+        const source = core.getInput('source', { required: true });
+        const destination = core.getInput('destination') || source;
+
+        const sourcePath = `${prefix}/${process.env.GITHUB_REPOSITORY}/${process.env.GITHUB_RUN_ID}/${process.env.GITHUB_RUN_ATTEMPT}/${source}`
+        const recursiveOption = source.endsWith('/') ? '--recursive' : '';
+
+        const bucket = 'tf-aws-gh-runner'
+
+        await exec.exec(`aws s3 cp s3://${bucket}/${sourcePath} ${destination} ${recursiveOption}`)
+
+        return destination
+      result-encoding: string
