@@ -29,6 +29,7 @@ module "runners" {
       ami_filter = { name = ["github-runner-ubuntu-focal-amd64-202209231503-testground"] }
       ami_owners  = ["642361402189"]
       enabled_userdata = false
+      enable_runner_binaries_syncer = false
       runner_run_as = "ubuntu"
       runners_maximum_count = 10
       block_device_mappings = [{
@@ -53,6 +54,7 @@ module "runners" {
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202209291154-kubo"] }
       ami_owners = ["642361402189"]
       enabled_userdata = false
+      enable_runner_binaries_syncer = false
       runner_run_as = "ubuntu"
       block_device_mappings = [{
         device_name           = "/dev/sda1"
@@ -93,6 +95,7 @@ module "runners" {
   ami_filter = lookup(each.value, "ami_filter", null)
   ami_owners = lookup(each.value, "ami_owners", ["amazon"])
   enabled_userdata = lookup(each.value, "enabled_userdata", true)
+  enable_runner_binaries_syncer = lookup(each.value, "enable_runner_binaries_syncer", true)
   runner_run_as = lookup(each.value, "runner_run_as", "ec2-user")
   block_device_mappings = lookup(each.value, "block_device_mappings", [{
     device_name           = "/dev/xvda"
