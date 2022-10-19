@@ -31,12 +31,12 @@ runs:
         const source = process.env.INPUTS_SOURCE;
         const destination = process.env.INPUTS_DESTINATION || source;
 
-        const sourcePath = `${prefix}/${process.env.GITHUB_REPOSITORY}/${process.env.GITHUB_RUN_ID}/${process.env.GITHUB_RUN_ATTEMPT}/${source}`
+        const sourceFullPath = `${prefix}/${process.env.GITHUB_REPOSITORY}/${process.env.GITHUB_RUN_ID}/${process.env.GITHUB_RUN_ATTEMPT}/${source}`
         const recursiveOption = source.endsWith('/') ? '--recursive' : '';
 
         const bucket = 'tf-aws-gh-runner'
 
-        await exec.exec(`aws s3 cp s3://${bucket}/${sourcePath} ${destination} ${recursiveOption}`)
+        await exec.exec(`aws s3 cp s3://${bucket}/${sourceFullPath} ${destination} ${recursiveOption}`)
 
         return destination
       result-encoding: string

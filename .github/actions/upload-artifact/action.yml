@@ -32,13 +32,13 @@ runs:
         const destination = process.env.INPUTS_DESTINATION || source;
 
         const sourceStats = fs.lstatSync(source);
-        const destinationBasename = sourceStats.isFile() && destination.endsWith('/') ? path.basename(source) : ''
-        const destinationPath = `${prefix}/${process.env.GITHUB_REPOSITORY}/${process.env.GITHUB_RUN_ID}/${process.env.GITHUB_RUN_ATTEMPT}/${destinationBasename}`
+        const destinationPath = sourceStats.isFile() && destination.endsWith('/') ? `${destination}/path.basename(source)` : destination
+        const destinationFullPath = `${prefix}/${process.env.GITHUB_REPOSITORY}/${process.env.GITHUB_RUN_ID}/${process.env.GITHUB_RUN_ATTEMPT}/${destinationPath}`
         const recursiveOption = fs.lstatSync(source).isDirectory() ? '--recursive' : '';
 
         const bucket = 'tf-aws-gh-runner'
 
-        await exec.exec(`aws s3 cp ${source} s3://${bucket}/${destinationPath} ${recursiveOption} --acl public-read`)
+        await exec.exec(`aws s3 cp ${source} s3://${bucket}/${destinationFullPath} ${recursiveOption} --acl public-read`)
 
-        return `https://${bucket}/${destinationPath}`
+        return `https://${bucket}/${destinationFullPath}`
       result-encoding: string
