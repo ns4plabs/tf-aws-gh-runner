@@ -16,6 +16,9 @@ runs:
   steps:
   - id: upload
     uses: actions/github-script@v6
+    env:
+      INPUTS_SOURCE: ${{ inputs.source }}
+      INPUTS_DESTINATION: ${{ inputs.destination }}
     with:
       script: |
         const fs = require('fs');
@@ -25,8 +28,8 @@ runs:
         const arn = JSON.parse(callerIdentity.stdout).Arn;
         const prefix = arn.match(/\/(.+)-runner-role\//)[1];
 
-        const source = core.getInput('source', { required: true });
-        const destination = core.getInput('destination') || source;
+        const source = process.env.INPUTS_SOURCE;
+        const destination = process.env.INPUTS_DESTINATION || source;
 
         const sourceStats = fs.lstatSync(source);
         const destinationBasename = sourceStats.isFile() && destination.endsWith('/') ? path.basename(source) : ''
