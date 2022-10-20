@@ -47,7 +47,7 @@ module "runners" {
     "kubo" = {
       runner_os = "linux"
       runner_architecture = "x64"
-      instance_types = ["m5.4xlarge"]
+      instance_types = ["c5.4xlarge"]
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo", "ipfs/kubo"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
@@ -60,10 +60,10 @@ module "runners" {
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
-        volume_type           = "gp3"
+        volume_type           = "io2"
         volume_size           = 100
         encrypted             = true
-        iops                  = 6000
+        iops                  = 2500
         throughput            = null
         kms_key_id            = null
         snapshot_id           = null
