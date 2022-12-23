@@ -98,6 +98,15 @@ build {
   sources = [
     "source.amazon-ebs.githubrunner"
   ]
+
+  # TODO: set up pull through cache on AWS
+  # https://aws.amazon.com/blogs/aws/announcing-pull-through-cache-repositories-for-amazon-elastic-container-registry/
+  # https://cloud.google.com/container-registry/docs/pulling-cached-images
+  provisioner "file" {
+    content = templatefile("../daemon.json", {})
+    destination = "/tmp/daemon.json"
+  }
+
   provisioner "shell" {
     environment_vars = [
       "DEBIAN_FRONTEND=noninteractive"
@@ -110,6 +119,7 @@ build {
       "sudo apt-get -y update",
       "sudo apt-get -y install docker-ce docker-ce-cli containerd.io jq git unzip",
       "sudo systemctl enable containerd.service",
+      "sudo cp /tmp/daemon.json /etc/docker/daemon.json",
       "sudo service docker start",
       "sudo usermod -a -G docker ubuntu",
       "sudo curl -f https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb -o amazon-cloudwatch-agent.deb",
