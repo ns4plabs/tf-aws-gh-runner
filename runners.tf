@@ -1,49 +1,5 @@
 module "runners" {
   for_each = {
-    "linux-x64-default" = {
-      runner_os = "linux"
-      runner_architecture = "x64"
-      instance_types = ["m5.large"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "singulargarden/pl-github"]
-      runners_maximum_count = 10
-    }
-    "windows-x64-default" = {
-      runner_os = "windows"
-      runner_architecture = "x64"
-      instance_types = ["m5.large"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
-      runners_maximum_count = 10
-    }
-    "linux-arm64-default" = {
-      runner_os = "linux"
-      runner_architecture = "arm64"
-      instance_types = ["m6g.large"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/ref-fvm"]
-      runners_maximum_count = 10
-    }
-    "testground" = {
-      runner_os = "linux"
-      runner_architecture = "x64"
-      instance_types = ["m5.2xlarge", "t3.2xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "singulargarden/pl-github"]
-      ami_filter = { name = ["github-runner-ubuntu-focal-amd64-202209231503-testground"] }
-      ami_owners  = ["642361402189"]
-      enabled_userdata = false
-      enable_runner_binaries_syncer = false
-      runner_run_as = "ubuntu"
-      runners_maximum_count = 10
-      block_device_mappings = [{
-        device_name           = "/dev/sda1"
-        delete_on_termination = true
-        volume_type           = "io2"
-        volume_size           = 100
-        encrypted             = true
-        iops                  = 16000
-        throughput            = null
-        kms_key_id            = null
-        snapshot_id           = null
-      }]
-    }
     "kubo" = {
       runner_os = "linux"
       runner_architecture = "x64"
@@ -51,7 +7,33 @@ module "runners" {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo", "ipfs/kubo"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202210191043-kubo"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202212231528-kubo"] }
+      ami_owners = ["642361402189"]
+      enabled_userdata = false
+      enable_runner_binaries_syncer = false
+      enable_runner_detailed_monitoring = true
+      runner_run_as = "ubuntu"
+      block_device_mappings = [{
+        device_name           = "/dev/sda1"
+        delete_on_termination = true
+        volume_type           = "io2"
+        volume_size           = 100
+        encrypted             = true
+        iops                  = 2500
+        throughput            = null
+        kms_key_id            = null
+        snapshot_id           = null
+      }]
+    }
+    "test-plans" = {
+      runner_os = "linux"
+      runner_architecture = "x64"
+      instance_types = ["m5.large"]
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/test-plans", "libp2p/test-plans"]
+      runners_maximum_count = 20
+      instance_target_capacity_type = "on-demand"
+      # TODO: change to an AMI built specifically for test-plans
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202212231528-kubo"] }
       ami_owners = ["642361402189"]
       enabled_userdata = false
       enable_runner_binaries_syncer = false

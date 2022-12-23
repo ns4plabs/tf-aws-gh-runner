@@ -6,7 +6,7 @@ on:
 jobs:
   run:
     name: Run
-    runs-on: [self-hosted, linux, x64, kubo]
+    runs-on: [self-hosted, linux, x64, test-plans]
     steps:
-      - run: echo 'Hello World!'
+      - run: docker system info
         shell: bash
