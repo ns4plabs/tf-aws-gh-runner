@@ -39,3 +39,45 @@ variable "github_app_id" {}
 variable "github_webhook_secret" {}
 
 data "aws_region" "default" {}
+
+data "aws_s3_bucket" "tf-aws-gh-runner" {
+  bucket = "tf-aws-gh-runner"
+}
+
+# RETENTION
+
+resource "aws_s3_bucket_lifecycle_configuration" "tf-aws-gh-runner" {
+  bucket = data.aws_s3_bucket.tf-aws-gh-runner.id
+
+  # artifacts.tf
+  dynamic "rule" {
+    for_each = module.runners
+
+    content {
+      id = rule.key
+      filter {
+        prefix = "${rule.key}/"
+      }
+      expiration {
+        days = 90
+      }
+      status = "Enabled"
+    }
+  }
+
+  # docker.tf
+  dynamic "rule" {
+    for_each = local.registries
+
+    content {
+      id = rule.value
+      filter {
+        prefix = "docker/${rule.value}/"
+      }
+      expiration {
+        days = 30
+      }
+      status = "Enabled"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+version: 0.1
+storage:
+  s3:
+    region: us-east-1
+    bucket: tf-aws-gh-runner
+    rootdirectory: /docker/proxy/v0
+  delete:
+    enabled: false
+  redirect:
+    disable: false
+  maintenance:
+    uploadpurging:
+      enabled: false
+    readonly:
+      enabled: true
+http:
+  secret: tf-aws-gh-runner-docker-proxy-v0
+health:
+  storagedriver:
+    enabled: false
+proxy:
+  remoteurl: https://registry-1.docker.io

@@ -1,7 +1,3 @@
-data "aws_s3_bucket" "tf-aws-gh-runner" {
-  bucket = "tf-aws-gh-runner"
-}
-
 // It would be even better if we could create these policies on demand
 // before booting up a new runner and have them limited to runner ID prefix,
 // but for that we would need to modify the scale up lambda function
@@ -42,22 +38,4 @@ resource "aws_iam_role_policy" "artifacts" {
       },
     ]
   })
-}
-
-resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
-  bucket = data.aws_s3_bucket.tf-aws-gh-runner.id
-  dynamic "rule" {
-    for_each = module.runners
-
-    content {
-      id = rule.key
-      filter {
-        prefix = "${rule.key}/"
-      }
-      expiration {
-        days = 90
-      }
-      status = "Enabled"
-    }
-  }
 }
