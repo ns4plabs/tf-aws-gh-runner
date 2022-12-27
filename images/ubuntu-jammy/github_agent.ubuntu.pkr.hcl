@@ -99,8 +99,6 @@ build {
     "source.amazon-ebs.githubrunner"
   ]
 
-  # TODO: set up pull through cache on AWS
-  # https://aws.amazon.com/blogs/aws/announcing-pull-through-cache-repositories-for-amazon-elastic-container-registry/
   # https://cloud.google.com/container-registry/docs/pulling-cached-images
   provisioner "file" {
     content = templatefile("../daemon.json", {})

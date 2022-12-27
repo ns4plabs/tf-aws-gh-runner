@@ -8,5 +8,5 @@ jobs:
     name: Run
     runs-on: [self-hosted, linux, x64, test-plans]
     steps:
-      - run: docker system info
+      - run: docker pull iptestground/testground:edge
         shell: bash
