@@ -8,5 +8,9 @@ jobs:
     name: Run
     runs-on: [self-hosted, linux, x64, test-plans]
     steps:
-      - run: curl -v internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com/v2/?foo=bar
+      - run: |
+          sudo sed -i 's#https://mirror.gcr.io#http://internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com#' /etc/docker/daemon.json
+          sudo service docker restart
+          docker system info
+          docker pull ubuntu
         shell: bash
