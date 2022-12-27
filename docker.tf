@@ -200,3 +200,33 @@ resource "aws_iam_role_policy" "docker_s3" {
     ]
   })
 }
+
+# SSM
+
+resource "aws_ssm_parameter" "docker" {
+  for_each = local.registries
+
+  name  = "/tf-aws-gh-runner/docker-${each.value}/aws_lb/dns_name"
+  type  = "String"
+  value = aws_lb.docker[each.value].dns_name
+}
+
+resource "aws_iam_role_policy" "docker" {
+  for_each = module.runners
+
+  name = "tf-aws-gh-runner-docker-${each.key}"
+  role = each.value.runners.role_runner.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter"
+        ]
+        Resource = [for registry in local.registries : aws_ssm_parameter.docker[registry].arn]
+      }
+    ]
+  })
+}
