@@ -2,6 +2,32 @@ locals {
   registries = toset(["cache", "proxy"])
 }
 
+# SG
+
+resource "aws_security_group" "docker" {
+  name        = "tf-aws-gh-runner-docker"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    # TODO: consider allowing traffic from runners SGs only
+    cidr_blocks      = [module.vpc.vpc_cidr_block]
+    ipv6_cidr_blocks = [module.vpc.vpc_ipv6_cidr_block]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = local.tags
+}
+
 # ALB
 
 resource "aws_lb" "docker" {
@@ -10,9 +36,8 @@ resource "aws_lb" "docker" {
   name               = "tf-aws-gh-runner-docker-${each.value}"
   internal           = true
   load_balancer_type = "application"
-  security_groups    = [module.vpc.default_security_group_id]
+  security_groups    = [aws_security_group.docker.id]
   subnets            = module.vpc.private_subnets
-  idle_timeout       = 900
 
   tags = local.tags
 }
@@ -54,7 +79,7 @@ resource "aws_lambda_function" "docker" {
   function_name     = "tf-aws-gh-runner-docker-${each.value}"
   role              = aws_iam_role.docker_lambda[each.value].arn
   handler           = "dist"
-  runtime           = "provided.al2"
+  runtime           = "go1.x"
   timeout           = 15
   architectures     = ["x86_64"]
 

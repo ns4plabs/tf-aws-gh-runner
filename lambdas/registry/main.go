@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -136,14 +135,14 @@ func StartHTTPHandler() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	reg, err := registry.NewRegistry(context.Background(), config)
-	if err != nil {
-		logrus.Fatal(err)
-	}
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
-		app := reflect.ValueOf(*reg).FieldByName("app").Interface().(*handlers.App)
+		app := handlers.NewApp(context.Background(), config)
 		lambda.Start(Handler(app))
 	} else {
+		reg, err := registry.NewRegistry(context.Background(), config)
+		if err != nil {
+			logrus.Fatal(err)
+		}
 		if err = reg.ListenAndServe(); err != nil {
 			logrus.Fatalln(err)
 		}

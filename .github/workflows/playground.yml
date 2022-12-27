@@ -8,5 +8,5 @@ jobs:
     name: Run
     runs-on: [self-hosted, linux, x64, test-plans]
     steps:
-      - run: curl -v internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com
+      - run: curl -v internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com/v2/?foo=bar
         shell: bash
