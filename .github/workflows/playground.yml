@@ -12,5 +12,5 @@ jobs:
           sudo sed -i 's#https://mirror.gcr.io#http://internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com#' /etc/docker/daemon.json
           sudo service docker restart
           docker system info
-          docker pull ubuntu
+          docker pull busybox
         shell: bash

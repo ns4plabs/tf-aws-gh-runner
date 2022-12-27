@@ -19,7 +19,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/distribution/distribution/v3/configuration"
-	"github.com/distribution/distribution/v3/registry"
 	"github.com/distribution/distribution/v3/registry/handlers"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/filesystem"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
@@ -130,20 +129,26 @@ func Handler(handler http.Handler) func(*events.ALBTargetGroupRequest) (*events.
 	}
 }
 
+func LoggingHandler(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			logrus.Info(fmt.Sprintf("RESPONSE: %v", w))
+		}()
+		logrus.Info(fmt.Sprintf("REQUEST: %v", r))
+		handler.ServeHTTP(w, r)
+	})
+}
+
 func StartHTTPHandler() {
 	config, err := configuration.Parse(strings.NewReader(os.Getenv("REGISTRY")))
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	app := handlers.NewApp(context.Background(), config)
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
-		app := handlers.NewApp(context.Background(), config)
-		lambda.Start(Handler(app))
+		lambda.Start(Handler(LoggingHandler(app)))
 	} else {
-		reg, err := registry.NewRegistry(context.Background(), config)
-		if err != nil {
-			logrus.Fatal(err)
-		}
-		if err = reg.ListenAndServe(); err != nil {
+		if err = http.ListenAndServe(config.HTTP.Addr, LoggingHandler(app)); err != nil {
 			logrus.Fatalln(err)
 		}
 	}
