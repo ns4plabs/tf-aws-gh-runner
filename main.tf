@@ -72,9 +72,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "tf-aws-gh-runner" {
     for_each = local.registries
 
     content {
-      id = rule.value
+      id = rule.key
       filter {
-        prefix = "docker/${rule.value}/"
+        prefix = "docker/${rule.key}/"
       }
       expiration {
         days = 30

@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-REGISTRY="$(cat configs/local.yml)" go run main.go

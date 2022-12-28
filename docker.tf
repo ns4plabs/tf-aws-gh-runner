@@ -1,11 +1,106 @@
 locals {
-  registries = toset(["cache", "proxy"])
+  registries = {
+    cache = {
+      environment = [
+        {
+          name = "REGISTRY_STORAGE"
+          value = <<-EOT
+            s3:
+              region: us-east-1
+              # TODO: consider using dedicated bucket
+              bucket: tf-aws-gh-runner
+              rootdirectory: /docker/cache/v0
+            delete:
+              enabled: false
+            redirect:
+              disable: false
+            maintenance:
+              uploadpurging:
+                enabled: false
+              readonly:
+                enabled: false
+          EOT
+        },
+        {
+          name = "REGISTRY_HTTP"
+          value = <<-EOT
+            addr: :5000
+            secret: tf-aws-gh-runner-docker-cache-v0
+          EOT
+        },
+        {
+          name = "REGISTRY_HEALTH"
+          value = <<-EOT
+            storagedriver:
+              enabled: false
+          EOT
+        },
+        {
+          name = "REGISTRY_LOG"
+          value = <<-EOT
+            level: info
+            formatter: json
+          EOT
+        }
+      ]
+    }
+    "proxy" = {
+      environment = [
+        {
+          name = "REGISTRY_STORAGE"
+          value = <<-EOT
+            s3:
+              region: us-east-1
+              # TODO: consider using dedicated bucket
+              bucket: tf-aws-gh-runner
+              rootdirectory: /docker/proxy/v0
+            delete:
+              enabled: false
+            redirect:
+              disable: false
+            maintenance:
+              uploadpurging:
+                enabled: false
+              readonly:
+                enabled: true
+          EOT
+        },
+        {
+          name = "REGISTRY_HTTP"
+          value = <<-EOT
+            addr: :5000
+            secret: tf-aws-gh-runner-docker-proxy-v0
+          EOT
+        },
+        {
+          name = "REGISTRY_HEALTH"
+          value = <<-EOT
+            storagedriver:
+              enabled: false
+          EOT
+        },
+        {
+          name = "REGISTRY_LOG"
+          value = <<-EOT
+            level: info
+            formatter: json
+          EOT
+        },
+        {
+          name = "REGISTRY_PROXY"
+          value = <<-EOT
+            remoteurl: https://registry-1.docker.io
+          EOT
+        }
+      ]
+    }
+  }
 }
 
 # SG
 
-resource "aws_security_group" "docker" {
-  name        = "tf-aws-gh-runner-docker"
+resource "aws_security_group" "docker_lb" {
+  name        = "tf-aws-gh-runner-docker-lb"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
@@ -28,15 +123,39 @@ resource "aws_security_group" "docker" {
   tags = local.tags
 }
 
+resource "aws_security_group" "docker" {
+  for_each     = local.registries
+
+  name        = "tf-aws-gh-runner-docker-${each.key}"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port        = 5000
+    to_port          = 5000
+    protocol         = "tcp"
+    security_groups = [aws_security_group.docker_lb.id]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = local.tags
+}
+
 # ALB
 
 resource "aws_lb" "docker" {
   for_each = local.registries
 
-  name               = "tf-aws-gh-runner-docker-${each.value}"
+  name               = "tf-aws-gh-runner-docker-${each.key}"
   internal           = true
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.docker.id]
+  security_groups    = [aws_security_group.docker_lb.id]
   subnets            = module.vpc.private_subnets
 
   tags = local.tags
@@ -45,13 +164,13 @@ resource "aws_lb" "docker" {
 resource "aws_lb_listener" "docker" {
   for_each = local.registries
 
-  load_balancer_arn = aws_lb.docker[each.value].id
+  load_balancer_arn = aws_lb.docker[each.key].id
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.docker[each.value].arn
+    target_group_arn = aws_lb_target_group.docker[each.key].arn
   }
 
   tags = local.tags
@@ -60,55 +179,83 @@ resource "aws_lb_listener" "docker" {
 resource "aws_lb_target_group" "docker" {
   for_each = local.registries
 
-  name        = "docker-${each.value}"
-  target_type = "lambda"
+  name        = "docker-${each.key}"
+  target_type = "ip"
   port        = "80"
   protocol    = "HTTP"
   vpc_id      = module.vpc.vpc_id
-  lambda_multi_value_headers_enabled = true
 
   tags = local.tags
 }
 
-# LAMBDA
+# ECS
 
-resource "aws_lambda_function" "docker" {
+resource "aws_ecs_task_definition" "docker" {
   for_each = local.registries
 
-  filename          = "${path.module}/lambdas/registry/dist.zip"
-  source_code_hash  = filebase64sha256("${path.module}/lambdas/registry/dist.zip")
-  function_name     = "tf-aws-gh-runner-docker-${each.value}"
-  role              = aws_iam_role.docker_lambda[each.value].arn
-  handler           = "dist"
-  runtime           = "go1.x"
-  timeout           = 15
-  architectures     = ["x86_64"]
+  family                   = "docker-${each.key}"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 1024
+  memory                   = 2048
+  execution_role_arn       = aws_iam_role.docker_exec[each.key].arn
+  task_role_arn            = aws_iam_role.docker[each.key].arn
 
-  environment {
-    variables = {
-      REGISTRY = file("${path.module}/lambdas/registry/configs/${each.value}.yml")
+  container_definitions = jsonencode([
+    {
+      name      = "docker-${each.key}"
+      # TODO: change to public ECR image; it'll require access to ECR on the exec role
+      image     = "registry:2.8.1"
+      cpu       = 1024
+      memory    = 2048
+      essential = true
+      networkMode = "awsvpc"
+      portMappings = [
+        {
+          containerPort = 5000
+          hostPort      = 5000
+        }
+      ]
+      environment = each.value.environment
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.docker[each.key].name
+          "awslogs-region"        = data.aws_region.default.name
+          "awslogs-stream-prefix" = "docker-${each.key}"
+        }
+      }
     }
+  ])
+}
+
+resource "aws_ecs_cluster" "docker" {
+  for_each = local.registries
+
+  name = "docker-${each.key}"
+}
+
+resource "aws_ecs_service" "docker" {
+  for_each = local.registries
+
+  name            = "docker-${each.key}"
+  cluster         = aws_ecs_cluster.docker[each.key].id
+  task_definition = aws_ecs_task_definition.docker[each.key].arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    security_groups = [aws_security_group.docker[each.key].id]
+    subnets         = module.vpc.private_subnets
   }
 
-  tags = local.tags
-}
+  load_balancer {
+    target_group_arn = aws_lb_target_group.docker[each.key].id
+    container_name   = "docker-${each.key}"
+    container_port   = 5000
+  }
 
-resource "aws_lambda_permission" "docker" {
-  for_each = local.registries
-
-  statement_id  = "AllowExecutionFromALB"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.docker[each.value].function_name
-  principal     = "elasticloadbalancing.amazonaws.com"
-  source_arn    = aws_lb_target_group.docker[each.value].arn
-}
-
-resource "aws_lb_target_group_attachment" "docker" {
-  for_each = local.registries
-
-  target_group_arn = aws_lb_target_group.docker[each.value].arn
-  target_id        = aws_lambda_function.docker[each.value].arn
-  depends_on       = [aws_lambda_permission.docker]
+  depends_on = [aws_lb_listener.docker]
 }
 
 # LOGGING
@@ -116,38 +263,46 @@ resource "aws_lb_target_group_attachment" "docker" {
 resource "aws_cloudwatch_log_group" "docker" {
   for_each = local.registries
 
-  name              = "/aws/lambda/${aws_lambda_function.docker[each.value].function_name}"
+  name              = "/aws/ecs/docker-${each.key}"
   retention_in_days = 7
   tags              = local.tags
 }
 
 # ACCESS
 
-data "aws_iam_policy_document" "lambda_assume_role_policy" {
+data "aws_iam_policy_document" "ecs_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
 
     principals {
       type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
+      identifiers = ["ecs-tasks.amazonaws.com"]
     }
   }
 }
 
-resource "aws_iam_role" "docker_lambda" {
+resource "aws_iam_role" "docker_exec" {
   for_each = local.registries
 
-  name                 = "role-tf-aws-gh-runner-docker-${each.value}"
-  assume_role_policy   = data.aws_iam_policy_document.lambda_assume_role_policy.json
-  path                 = "/tf-aws-gh-runner-docker/"
+  name                 = "role-tf-aws-gh-runner-docker-exec-${each.key}"
+  assume_role_policy   = data.aws_iam_policy_document.ecs_assume_role_policy.json
+  tags                 = local.tags
+}
+
+resource "aws_iam_role" "docker" {
+  for_each = local.registries
+
+  name                 = "role-tf-aws-gh-runner-docker-${each.key}"
+  assume_role_policy   = data.aws_iam_policy_document.ecs_assume_role_policy.json
   tags                 = local.tags
 }
 
 resource "aws_iam_role_policy" "docker_logging" {
   for_each = local.registries
 
-  name = "logging-policy-tf-aws-gh-runner-docker-${each.value}"
-  role = aws_iam_role.docker_lambda[each.value].name
+  name = "logging-tf-aws-gh-runner-docker-${each.key}"
+  role = aws_iam_role.docker_exec[each.key].name
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -157,7 +312,7 @@ resource "aws_iam_role_policy" "docker_logging" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "${aws_cloudwatch_log_group.docker[each.value].arn}*"
+        Resource = "${aws_cloudwatch_log_group.docker[each.key].arn}*"
       }
     ]
   })
@@ -166,8 +321,8 @@ resource "aws_iam_role_policy" "docker_logging" {
 resource "aws_iam_role_policy" "docker_s3" {
   for_each = local.registries
 
-  name = "s3-policy-tf-aws-gh-runner-docker-${each.value}"
-  role = aws_iam_role.docker_lambda[each.value].name
+  name = "s3-policy-tf-aws-gh-runner-docker-${each.key}"
+  role = aws_iam_role.docker[each.key].name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -181,7 +336,7 @@ resource "aws_iam_role_policy" "docker_s3" {
           "s3:PutObjectAcl",
         ]
         Effect   = "Allow"
-        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}/docker/${each.value}/*"]
+        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}/docker/${each.key}/*"]
       },
       {
         Sid = "AllowLimitedList"
@@ -193,7 +348,7 @@ resource "aws_iam_role_policy" "docker_s3" {
         Condition = {
           StringLike: {
             "s3:prefix" = [
-              "docker/${each.value}/*",
+              "docker/${each.key}/*",
             ]
           }
         }
@@ -207,9 +362,9 @@ resource "aws_iam_role_policy" "docker_s3" {
 resource "aws_ssm_parameter" "docker" {
   for_each = local.registries
 
-  name  = "/tf-aws-gh-runner/docker/${each.value}_aws_lb_dns_name"
+  name  = "/tf-aws-gh-runner/docker/${each.key}_aws_lb_dns_name"
   type  = "String"
-  value = aws_lb.docker[each.value].dns_name
+  value = aws_lb.docker[each.key].dns_name
 }
 
 resource "aws_iam_role_policy" "shared_ssm" {
