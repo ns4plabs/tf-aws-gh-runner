@@ -50,11 +50,12 @@ echo "Retrieved /tf-aws-gh-runner/docker/proxy_aws_lb_dns_name parameter - ($doc
 
 ## Configure the docker proxy
 
-sudo echo '{"registry-mirrors": ["'"$docker_proxy"'"]}' > /etc/docker/daemon.json
+sudo echo '{"registry-mirrors": ["'"http://$docker_proxy"'"]}' > /etc/docker/daemon.json
 sudo service docker restart
 
 ## Configure the docker cache
 
+# TODO: move to hcl so that we don't do this every time a runner starts
 docker buildx create --use --driver=docker-container
 docker buildx install
 

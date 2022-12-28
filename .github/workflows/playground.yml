@@ -8,9 +8,14 @@ jobs:
     name: Run
     runs-on: [self-hosted, linux, x64, test-plans]
     steps:
+      - uses: actions/checkout@v3
+      - id: docker-cache
+        uses: ./.github/actions/docker-cache
       - run: |
-          sudo sed -i 's#https://mirror.gcr.io#http://internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com#' /etc/docker/daemon.json
-          sudo service docker restart
-          docker system info
-          docker pull busybox
+          docker build --cache-from=${{ steps.docker-cache.outputs.from }} --cache-to=${{ steps.docker-cache.outputs.to }} .
+        working-directory: lambdas/registry
+        shell: bash
+      - run: |
+          docker build --cache-from=${{ steps.docker-cache.outputs.from }} --cache-to=${{ steps.docker-cache.outputs.to }} .
+        working-directory: lambdas/registry
         shell: bash

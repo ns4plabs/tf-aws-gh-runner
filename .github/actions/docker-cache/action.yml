@@ -2,9 +2,8 @@ name: Docker Cache
 description: Retrieve docker cache configuration
 inputs:
   name:
-    description: 'The name of the tag to use for caching blobs and manifests'
-    required: true
-    default: 'buildkit'
+    description: 'The name of the tag to use for caching docker blobs and manifests'
+    required: false
 outputs:
   cache-to:
     description: 'The CSV value of the docker build --cache-to parameter'
@@ -24,10 +23,10 @@ runs:
         const fs = require('fs');
         const path = require('path');
 
-        const parameters = await exec.getExecOutput('aws ssm get-parameters --names "/tf-aws-gh-runner/docker/cache_aws_lb_dns_name"');
-        const registry = JSON.parse(parameters.stdout)[0].Value;
+        const parameters = await exec.getExecOutput('aws ssm get-parameter --name "/tf-aws-gh-runner/docker/cache_aws_lb_dns_name"');
+        const registry = `http://${JSON.parse(parameters.stdout).Parameter.Value}`;
 
-        const name = process.env.INPUTS_NAME
+        const name = process.env.INPUTS_NAME || process.env.GITHUB_REPOSITORY
 
         // TODO: consider using S3 cache directly, see https://github.com/moby/buildkit#s3-cache-experimental
         return {

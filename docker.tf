@@ -212,10 +212,10 @@ resource "aws_ssm_parameter" "docker" {
   value = aws_lb.docker[each.value].dns_name
 }
 
-resource "aws_iam_role_policy" "docker" {
+resource "aws_iam_role_policy" "shared_ssm" {
   for_each = module.runners
 
-  name = "tf-aws-gh-runner-docker-${each.key}"
+  name = "tf-aws-gh-runner-shared-${each.key}"
   role = each.value.runners.role_runner.id
 
   policy = jsonencode({
@@ -224,9 +224,13 @@ resource "aws_iam_role_policy" "docker" {
       {
         Effect = "Allow"
         Action = [
-          "ssm:GetParameter"
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
         ]
-        Resource = [for registry in local.registries : aws_ssm_parameter.docker[registry].arn]
+        Resource = [
+          "arn:aws:ssm:${data.aws_region.default.name}:${data.aws_caller_identity.current.account_id}:parameter/tf-aws-gh-runner/*"
+        ]
       }
     ]
   })

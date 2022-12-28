@@ -44,6 +44,8 @@ data "aws_s3_bucket" "tf-aws-gh-runner" {
   bucket = "tf-aws-gh-runner"
 }
 
+data "aws_caller_identity" "current" {}
+
 # RETENTION
 
 resource "aws_s3_bucket_lifecycle_configuration" "tf-aws-gh-runner" {
