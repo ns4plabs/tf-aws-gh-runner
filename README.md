@@ -6,8 +6,8 @@ This project uses [terraform-aws-github-runner](https://github.com/philips-labs/
 
 | Name | OS | Architecture | Instance Type | AMI |
 | --- | --- | --- | --- | --- |
-| kubo | linux | x64 | [c5.4xlarge](https://instances.vantage.sh/?selected=c5.4xlarge) | `github-runner-ubuntu-jammy-amd64-202212281709-kubo` built with [kubo.pkrvars](images/ubuntu-jammy/kubo.pkrvars.hcl) |
-| test-plans | linux | x64 | [m5.large](https://instances.vantage.sh/?selected=c5.4xlarge) | `github-runner-ubuntu-jammy-amd64-202212281709-kubo` built with [kubo.pkrvars](images/ubuntu-jammy/kubo.pkrvars.hcl) |
+| kubo | linux | x64 | [c5.4xlarge](https://instances.vantage.sh/?selected=c5.4xlarge) | `github-runner-ubuntu-jammy-amd64-202212281833-kubo` built with [kubo.pkrvars](images/ubuntu-jammy/kubo.pkrvars.hcl) |
+| test-plans | linux | x64 | [m5.large](https://instances.vantage.sh/?selected=c5.4xlarge) | `github-runner-ubuntu-jammy-amd64-202212281833-kubo` built with [kubo.pkrvars](images/ubuntu-jammy/kubo.pkrvars.hcl) |
 
 ## Usage
 

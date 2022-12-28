@@ -12,6 +12,9 @@ jobs:
       - id: docker-cache
         uses: ./.github/actions/docker-cache
       - run: |
+          docker build --help
+        shell: bash
+      - run: |
           docker build --cache-from=${{ steps.docker-cache.outputs.from }} --cache-to=${{ steps.docker-cache.outputs.to }} .
         working-directory: lambdas/registry
         shell: bash

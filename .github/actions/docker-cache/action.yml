@@ -5,26 +5,36 @@ inputs:
     description: 'The name of the tag to use for caching docker blobs and manifests'
     required: false
 outputs:
-  cache-to:
+  to:
     description: 'The CSV value of the docker build --cache-to parameter'
     value: ${{ fromJSON(steps.cache.outputs.result).to }}
-  cache-from:
+  from:
     description: 'The CSV value of the docker build --cache-from parameter'
     value: ${{ fromJSON(steps.cache.outputs.result).from }}
 runs:
   using: composite
   steps:
+  - run: |
+      sudo echo 'insecure-entitlements = [ "network.host", "security.insecure" ]' > buildkitd.toml
+      sudo echo '[registry."docker.io"]' >> buildkitd.toml
+      sudo echo '  mirrors = ["internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com"]' >> buildkitd.toml
+      sudo echo '  http = true' >> buildkitd.toml
+      sudo echo '  insecure = true' >> buildkitd.toml
+      sudo echo '[registry."internal-tf-aws-gh-runner-docker-cache-1329192429.us-east-1.elb.amazonaws.com"]' >> buildkitd.toml
+      sudo echo '  http = true' >> buildkitd.toml
+      sudo echo '  insecure = true' >> buildkitd.toml
+    shell: bash
   - id: cache
     uses: actions/github-script@v6
     env:
       INPUTS_NAME: ${{ inputs.name }}
     with:
       script: |
-        const fs = require('fs');
-        const path = require('path');
+        await exec.exec('docker buildx create --use --driver=docker-container --config=buildkitd.toml');
+        await exec.exec('docker buildx install');
 
         const parameters = await exec.getExecOutput('aws ssm get-parameter --name "/tf-aws-gh-runner/docker/cache_aws_lb_dns_name"');
-        const registry = `http://${JSON.parse(parameters.stdout).Parameter.Value}`;
+        const registry = JSON.parse(parameters.stdout).Parameter.Value;
 
         const name = process.env.INPUTS_NAME || process.env.GITHUB_REPOSITORY
 
