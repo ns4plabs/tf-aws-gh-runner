@@ -2,6 +2,7 @@ version: 0.1
 storage:
   s3:
     region: us-east-1
+    # TODO: consider using dedicated bucket
     bucket: tf-aws-gh-runner
     rootdirectory: /docker/proxy/v0
   delete:

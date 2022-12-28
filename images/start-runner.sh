@@ -39,6 +39,25 @@ if [[ "$enable_cloudwatch_agent" == "true" ]]; then
   amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c "ssm:$environment-cloudwatch_agent_config_runner"
 fi
 
+docker_parameters=$(aws ssm get-parameters-by-path --path "/tf-aws-gh-runner/docker" --region "$region" --query "Parameters[*].{Name:Name,Value:Value}")
+echo "Retrieved docker parameters from AWS SSM ($parameters)"
+
+docker_proxy=$(echo "$docker_parameters" | jq -r '.[] | select(.Name == "/tf-aws-gh-runner/docker/proxy_aws_lb_dns_name") | .Value')
+echo "Retrieved /tf-aws-gh-runner/docker/proxy_aws_lb_dns_name parameter - ($docker_proxy)"
+
+# docker_cache=$(echo "$docker_parameters" | jq -r '.[] | select(.Name == "/tf-aws-gh-runner/docker/cache_aws_lb_dns_name") | .Value')
+# echo "Retrieved /tf-aws-gh-runner/docker/cache_aws_lb_dns_name parameter - ($docker_cache)"
+
+## Configure the docker proxy
+
+sudo echo '{"registry-mirrors": ["'"$docker_proxy"'"]}' > /etc/docker/daemon.json
+sudo service docker restart
+
+## Configure the docker cache
+
+docker buildx create --use --driver=docker-container
+docker buildx install
+
 ## Configure the runner
 
 echo "Get GH Runner config from AWS SSM"

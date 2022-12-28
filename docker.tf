@@ -207,7 +207,7 @@ resource "aws_iam_role_policy" "docker_s3" {
 resource "aws_ssm_parameter" "docker" {
   for_each = local.registries
 
-  name  = "/tf-aws-gh-runner/docker-${each.value}/aws_lb/dns_name"
+  name  = "/tf-aws-gh-runner/docker/${each.value}_aws_lb_dns_name"
   type  = "String"
   value = aws_lb.docker[each.value].dns_name
 }
