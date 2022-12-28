@@ -9,25 +9,9 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 )
 
-require golang.org/x/term v0.3.0
-
 require (
-	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/aws/aws-sdk-go v1.43.16 // indirect
-	github.com/bshuster-repo/logrus-logstash-hook v1.0.0 // indirect
-	github.com/bugsnag/bugsnag-go v0.0.0-20141110184014-b1d153021fcd // indirect
-	github.com/bugsnag/osext v0.0.0-20130617224835-0dd3f918b21b // indirect
-	github.com/bugsnag/panicwrap v0.0.0-20151223152923-e2c28503fcd0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/spf13/cobra v1.6.1 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/yvasiyarov/go-metrics v0.0.0-20140926110328-57bccd1ccd43 // indirect
-	github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50 // indirect
-	github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f // indirect
-	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
-	golang.org/x/net v0.4.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
 )
 
 require (
@@ -49,7 +33,7 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	golang.org/x/sys v0.3.0
+	golang.org/x/sys v0.3.0 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

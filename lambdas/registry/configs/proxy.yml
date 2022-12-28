@@ -20,3 +20,6 @@ health:
     enabled: false
 proxy:
   remoteurl: https://registry-1.docker.io
+log:
+  level: info
+  formatter: json

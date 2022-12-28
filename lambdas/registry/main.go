@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/textproto"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -23,8 +25,6 @@ import (
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/filesystem"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/inmemory"
 	_ "github.com/distribution/distribution/v3/registry/storage/driver/s3-aws"
-	"golang.org/x/sys/unix"
-	"golang.org/x/term"
 )
 
 type ResponseWriter struct {
@@ -58,16 +58,7 @@ func (w *ResponseWriter) ALBTargetGroupResponse() (*events.ALBTargetGroupRespons
 	} else {
 		ret.StatusCode = http.StatusOK
 	}
-	for key, values := range w.header {
-		if len(values) > 1 {
-			return nil, fmt.Errorf("header has multiple values: " + key)
-		} else if len(values) == 1 {
-			if ret.Headers == nil {
-				ret.Headers = map[string]string{}
-			}
-			ret.Headers[key] = values[0]
-		}
-	}
+	ret.MultiValueHeaders = w.header
 	if w.body != nil {
 		ret.Body = base64.StdEncoding.EncodeToString(w.body.Bytes())
 		ret.IsBase64Encoded = true
@@ -109,10 +100,13 @@ func NewRequest(request *events.ALBTargetGroupRequest) (*http.Request, error) {
 		req.Body = io.NopCloser(bytes.NewReader(body))
 	}
 
-	for key, value := range request.Headers {
-		req.Header.Set(key, value)
+	req.Header = make(map[string][]string)
+	for key, value := range request.MultiValueHeaders {
+		req.Header[textproto.CanonicalMIMEHeaderKey(key)] = value
 	}
-	req.Host = req.Header.Get("Host")
+	if req.Header["Host"] != nil && len(req.Header["Host"]) > 0 {
+		req.Host = req.Header["Host"][0]
+	}
 
 	return req, nil
 }
@@ -124,17 +118,20 @@ func Handler(handler http.Handler) func(*events.ALBTargetGroupRequest) (*events.
 			return nil, err
 		}
 		resp := &ResponseWriter{}
+		logrus.Debug(fmt.Sprintf("REQUEST(ALB): %#v", req))
 		handler.ServeHTTP(resp, req)
-		return resp.ALBTargetGroupResponse()
+		r, err := resp.ALBTargetGroupResponse()
+		logrus.Debug(fmt.Sprintf("RESPONSE(ALB): %#v", r))
+		return r, err
 	}
 }
 
 func LoggingHandler(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
-			logrus.Info(fmt.Sprintf("RESPONSE: %v", w))
+			logrus.Debug(fmt.Sprintf("RESPONSE: %#v", w))
 		}()
-		logrus.Info(fmt.Sprintf("REQUEST: %v", r))
+		logrus.Debug(fmt.Sprintf("REQUEST: %#v", r))
 		handler.ServeHTTP(w, r)
 	})
 }
@@ -144,6 +141,7 @@ func StartHTTPHandler() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	configureLogging(config)
 	app := handlers.NewApp(context.Background(), config)
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		lambda.Start(Handler(LoggingHandler(app)))
@@ -154,11 +152,31 @@ func StartHTTPHandler() {
 	}
 }
 
-func main() {
-	if !term.IsTerminal(unix.Stdout) {
-		logrus.SetFormatter(&logrus.JSONFormatter{})
+func configureLogging(config *configuration.Configuration) {
+	if config.Log.Level != "" {
+		level, err := logrus.ParseLevel(string(config.Log.Level))
+		if err != nil {
+			logrus.Fatalf("error parsing log level: %v", err)
+		}
+		logrus.SetLevel(level)
 	}
+	if config.Log.Formatter != "" {
+		if config.Log.Formatter == "text" {
+			logrus.SetFormatter(&logrus.TextFormatter{
+				DisableColors: true,
+				FullTimestamp: true,
+			})
+		} else if config.Log.Formatter == "json" {
+			logrus.SetFormatter(&logrus.JSONFormatter{
+				TimestampFormat: time.RFC3339Nano,
+			})
+		} else {
+			logrus.Fatalf("unknown log formatter: %s", config.Log.Formatter)
+		}
+	}
+}
 
+func main() {
 	flags := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	if err := flags.Parse(os.Args[1:]); err != nil {
 		if err == flag.ErrHelp {
