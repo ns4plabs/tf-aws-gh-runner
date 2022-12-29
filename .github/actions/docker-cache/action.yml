@@ -41,6 +41,6 @@ runs:
         // TODO: consider using S3 cache directly, see https://github.com/moby/buildkit#s3-cache-experimental
         return {
           to: `type=registry,mode=max,ref=${registry}/${name}`,
-          from: 'type=registry,ref=${registry}/${name}'
+          from: `type=registry,ref=${registry}/${name}`
         }
       result-encoding: json
