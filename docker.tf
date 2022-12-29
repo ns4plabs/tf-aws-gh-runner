@@ -38,7 +38,7 @@ locals {
         {
           name = "REGISTRY_LOG"
           value = <<-EOT
-            level: info
+            level: debug
             formatter: json
           EOT
         },
