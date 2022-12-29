@@ -20,3 +20,7 @@ jobs:
       - run: |
           docker build --cache-from=${{ steps.docker-cache.outputs.from }} --cache-to=${{ steps.docker-cache.outputs.to }} .
         shell: bash
+      - run: |
+          docker image ls
+          docker logs buildkit
+        shell: bash

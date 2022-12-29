@@ -28,7 +28,7 @@ runs:
       INPUTS_NAME: ${{ inputs.name }}
     with:
       script: |
-        await exec.exec('docker buildx create --use --driver=docker-container --driver-opt image=moby/buildkit:master --config=buildkitd.toml');
+        await exec.exec('docker buildx create --use --driver=docker-container --driver-opt image=moby/buildkit:master --config=buildkitd.toml --name buildkit');
         await exec.exec('docker buildx install');
 
         const name = process.env.INPUTS_NAME || process.env.GITHUB_REPOSITORY
