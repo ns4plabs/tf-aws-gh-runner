@@ -13,7 +13,7 @@ jobs:
         uses: ./.github/actions/docker-cache
       - run: |
           echo "FROM ubuntu:latest" > Dockerfile
-          echo "RUN sleep 60" >> Dockerfile
+          echo "RUN sleep 5" >> Dockerfile
       - run: |
           docker build --help
         shell: bash

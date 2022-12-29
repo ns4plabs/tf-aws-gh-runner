@@ -370,24 +370,22 @@ resource "aws_iam_role_policy" "docker_s3" {
           "s3:GetObjectAcl",
           "s3:PutObject",
           "s3:PutObjectAcl",
+          "s3:DeleteObject",
+          "s3:ListMultipartUploadParts",
+          "s3:AbortMultipartUpload"
         ]
         Effect   = "Allow"
-        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}/docker/${each.key}/*"]
+        Resource = ["*"]
       },
       {
         Sid = "AllowLimitedList"
         Action = [
           "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:ListBucketMultipartUploads"
         ]
         Effect   = "Allow"
-        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}"]
-        Condition = {
-          StringLike: {
-            "s3:prefix" = [
-              "docker/${each.key}/*",
-            ]
-          }
-        }
+        Resource = ["*"]
       },
     ]
   })
