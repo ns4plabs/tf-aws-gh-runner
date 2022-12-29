@@ -15,12 +15,19 @@ runs:
   using: composite
   steps:
   - run: |
-      sudo echo 'debug = true' > buildkitd.toml
-      sudo echo 'insecure-entitlements = [ "network.host", "security.insecure" ]' >> buildkitd.toml
-      sudo echo '[registry."internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com"]' >> buildkitd.toml
-      sudo echo '  http = true' >> buildkitd.toml
-      sudo echo '  insecure = true' >> buildkitd.toml
-      cat buildkitd.toml
+      touch buildkitd.toml
+      echo 'debug = true' >> buildkitd.toml
+      echo 'insecure-entitlements = [' >> buildkitd.toml
+      echo '  "network.host",' >> buildkitd.toml
+      echo '  "security.insecure"' >> buildkitd.toml
+      echo ']' >> buildkitd.toml
+      echo '[registry."docker.io"]' >> buildkitd.toml
+      echo '  mirrors = [' >> buildkitd.toml
+      echo '    "internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com"' >> buildkitd.toml
+      echo '  ]' >> buildkitd.toml
+      echo '[registry."internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com"]' >> buildkitd.toml
+      echo '  http = true' >> buildkitd.toml
+      echo '  insecure = true' >> buildkitd.toml
     shell: bash
   - id: cache
     uses: actions/github-script@v6
@@ -28,8 +35,8 @@ runs:
       INPUTS_NAME: ${{ inputs.name }}
     with:
       script: |
-        await exec.exec('docker buildx create --use --driver=docker-container --driver-opt image=moby/buildkit:master --config=buildkitd.toml --name buildkit');
-        await exec.exec('docker buildx install');
+        await exec.exec('docker buildx create --use --driver=docker-container --driver-opt=image=moby/buildkit:master --config=buildkitd.toml --name=buildkit');
+        await exec.exec('docker buildx inspect --bootstrap')
 
         const name = process.env.INPUTS_NAME || process.env.GITHUB_REPOSITORY
 

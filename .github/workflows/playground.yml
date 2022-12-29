@@ -12,15 +12,11 @@ jobs:
       - id: docker-cache
         uses: ./.github/actions/docker-cache
       - run: |
-          echo "FROM ubuntu:latest" > Dockerfile
-          echo "RUN sleep 5" >> Dockerfile
-      - run: |
-          docker build --help
+          docker buildx build --load . -f-<<EOF
+          FROM alpine
+          RUN echo "hello world"
+          EOF
         shell: bash
       - run: |
-          docker build --cache-from=${{ steps.docker-cache.outputs.from }} --cache-to=${{ steps.docker-cache.outputs.to }} .
-        shell: bash
-      - run: |
-          docker image ls
-          docker logs buildkit
+          docker logs buildx_buildkit_buildkit0
         shell: bash
