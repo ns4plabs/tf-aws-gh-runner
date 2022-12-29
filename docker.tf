@@ -41,10 +41,20 @@ locals {
             level: info
             formatter: json
           EOT
+        },
+        {
+          name = "REGISTRY_REDIS"
+          value = <<-EOT
+          EOT
+        },
+        {
+          name = "REGISTRY_NOTIFICATIONS"
+          value = <<-EOT
+          EOT
         }
       ]
     }
-    "proxy" = {
+    proxy = {
       environment = [
         {
           name = "REGISTRY_STORAGE"
@@ -84,6 +94,16 @@ locals {
           value = <<-EOT
             level: info
             formatter: json
+          EOT
+        },
+        {
+          name = "REGISTRY_REDIS"
+          value = <<-EOT
+          EOT
+        },
+        {
+          name = "REGISTRY_NOTIFICATIONS"
+          value = <<-EOT
           EOT
         },
         {
@@ -205,7 +225,8 @@ resource "aws_ecs_task_definition" "docker" {
     {
       name      = "docker-${each.key}"
       # TODO: change to public ECR image; it'll require access to ECR on the exec role
-      image     = "registry:2.8.1"
+      # WARN: Why edge instead of registry:2.8.1? https://github.com/distribution/distribution/issues/3645#issuecomment-1347430516
+      image     = "distribution/distribution:edge"
       cpu       = 1024
       memory    = 2048
       essential = true
@@ -270,22 +291,24 @@ resource "aws_cloudwatch_log_group" "docker" {
 
 # ACCESS
 
-data "aws_iam_policy_document" "ecs_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
-}
-
 resource "aws_iam_role" "docker_exec" {
   for_each = local.registries
 
   name                 = "role-tf-aws-gh-runner-docker-exec-${each.key}"
-  assume_role_policy   = data.aws_iam_policy_document.ecs_assume_role_policy.json
+  assume_role_policy   = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "ecs-tasks.amazonaws.com"
+          ]
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
   tags                 = local.tags
 }
 
@@ -293,7 +316,20 @@ resource "aws_iam_role" "docker" {
   for_each = local.registries
 
   name                 = "role-tf-aws-gh-runner-docker-${each.key}"
-  assume_role_policy   = data.aws_iam_policy_document.ecs_assume_role_policy.json
+  assume_role_policy   = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "ecs-tasks.amazonaws.com"
+          ]
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
   tags                 = local.tags
 }
 
