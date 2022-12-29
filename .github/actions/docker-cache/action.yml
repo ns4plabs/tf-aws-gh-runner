@@ -15,7 +15,8 @@ runs:
   using: composite
   steps:
   - run: |
-      sudo echo 'insecure-entitlements = [ "network.host", "security.insecure" ]' > buildkitd.toml
+      sudo echo 'debug = true' > buildkitd.toml
+      sudo echo 'insecure-entitlements = [ "network.host", "security.insecure" ]' >> buildkitd.toml
       sudo echo '[registry."docker.io"]' >> buildkitd.toml
       sudo echo '  mirrors = ["internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com"]' >> buildkitd.toml
       sudo echo '  http = true' >> buildkitd.toml
@@ -23,6 +24,7 @@ runs:
       sudo echo '[registry."internal-tf-aws-gh-runner-docker-cache-1329192429.us-east-1.elb.amazonaws.com"]' >> buildkitd.toml
       sudo echo '  http = true' >> buildkitd.toml
       sudo echo '  insecure = true' >> buildkitd.toml
+      cat buildkitd.toml
     shell: bash
   - id: cache
     uses: actions/github-script@v6
@@ -40,7 +42,7 @@ runs:
 
         // TODO: consider using S3 cache directly, see https://github.com/moby/buildkit#s3-cache-experimental
         return {
-          to: `type=registry,mode=max,ref=${registry}/${name}`,
-          from: `type=registry,ref=${registry}/${name}`
+          to: `type=registry,mode=max,ref=${registry}/${name}:cache`,
+          from: `type=registry,ref=${registry}/${name}:cache`
         }
       result-encoding: json
