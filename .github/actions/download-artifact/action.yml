@@ -21,9 +21,6 @@ runs:
       INPUTS_DESTINATION: ${{ inputs.destination }}
     with:
       script: |
-        const fs = require('fs');
-        const path = require('path');
-
         const callerIdentity = await exec.getExecOutput('aws sts get-caller-identity');
         const arn = JSON.parse(callerIdentity.stdout).Arn;
         const prefix = arn.match(/\/(.+)-runner-role\//)[1];

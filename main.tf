@@ -82,15 +82,4 @@ resource "aws_s3_bucket_lifecycle_configuration" "tf-aws-gh-runner" {
       status = "Enabled"
     }
   }
-
-  rule {
-    id      = "cache"
-    filter {
-      prefix = "docker/cache/"
-    }
-    expiration {
-      days = 30
-    }
-    status = "Enabled"
-  }
 }

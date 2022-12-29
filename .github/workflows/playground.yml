@@ -12,11 +12,8 @@ jobs:
       - id: docker-cache
         uses: ./.github/actions/docker-cache
       - run: |
-          docker buildx build --load . -f-<<EOF
-          FROM alpine
+          docker buildx build --load . --cache-from=${steps.docker-cache.outputs.from} --cache-to=${steps.docker-cache.outputs.to} -f-<<EOF
+          FROM ubuntu
           RUN echo "hello world"
           EOF
-        shell: bash
-      - run: |
-          docker logs buildx_buildkit_buildkit0
         shell: bash

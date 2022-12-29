@@ -172,7 +172,7 @@ resource "aws_ecs_task_definition" "docker" {
       name      = "docker-${each.key}"
       # TODO: change to public ECR image; it'll require access to ECR on the exec role
       # WARN: Why edge instead of registry:2.8.1? https://github.com/distribution/distribution/issues/3645#issuecomment-1347430516
-      image     = "distribution/distribution:edge"
+      image     = "distribution/distribution@sha256:43300dba89e7432db97365a4cb2918017ae8c08afb3d72fff0cb92db674bbc17"
       cpu       = 1024
       memory    = 2048
       essential = true
@@ -321,7 +321,7 @@ resource "aws_iam_role_policy" "docker_s3" {
           "s3:AbortMultipartUpload"
         ]
         Effect   = "Allow"
-        Resource = ["*"]
+        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}/docker/${each.key}*"]
       },
       {
         Sid = "AllowLimitedList"
@@ -331,7 +331,14 @@ resource "aws_iam_role_policy" "docker_s3" {
           "s3:ListBucketMultipartUploads"
         ]
         Effect   = "Allow"
-        Resource = ["*"]
+        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}"]
+        Condition = {
+          StringLike: {
+            "s3:prefix" = [
+              "docker/${each.key}*",
+            ]
+          }
+        }
       },
     ]
   })
@@ -366,38 +373,7 @@ resource "aws_iam_role_policy" "shared_ssm" {
         Resource = [
           "arn:aws:ssm:${data.aws_region.default.name}:${data.aws_caller_identity.current.account_id}:parameter/tf-aws-gh-runner/*"
         ]
-      },
-      {
-        Sid = "AllowLimitedGetPut"
-        Action = [
-          "s3:GetObject",
-          "s3:GetObjectAcl",
-          "s3:PutObject",
-          "s3:PutObjectAcl",
-          "s3:DeleteObject",
-          "s3:ListMultipartUploadParts",
-          "s3:AbortMultipartUpload"
-        ]
-        Effect   = "Allow"
-        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}/docker/cache/*"]
-      },
-      {
-        Sid = "AllowLimitedList"
-        Action = [
-          "s3:ListBucket",
-          "s3:GetBucketLocation",
-          "s3:ListBucketMultipartUploads"
-        ]
-        Effect   = "Allow"
-        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}"]
-        Condition = {
-          StringLike: {
-            "s3:prefix" = [
-              "docker/cache/*",
-            ]
-          }
-        }
-      },
+      }
     ]
   })
 }

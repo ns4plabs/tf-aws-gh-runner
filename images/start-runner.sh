@@ -58,20 +58,20 @@ sudo echo '  ]' >> /etc/docker/daemon.json
 sudo echo '}' >> /etc/docker/daemon.json
 
 sudo mkdir -p /etc/buildkit
-sudo echo 'insecure-entitlements = [' > /etc/buildkit/config.toml
-sudo echo '  "network.host",' >> /etc/buildkit/config.toml
-sudo echo '  "security.insecure"' >> /etc/buildkit/config.toml
-sudo echo ']' >> /etc/buildkit/config.toml
-sudo echo '[registry."docker.io"]' >> /etc/buildkit/config.toml
-sudo echo '  mirrors = [' >> /etc/buildkit/config.toml
-sudo echo '    "'"$docker_proxy"'"' >> /etc/buildkit/config.toml
-sudo echo '  ]' >> /etc/buildkit/config.toml
-sudo echo '[registry."'"$docker_proxy"'"]' >> /etc/buildkit/config.toml
-sudo echo '  http = true' >> /etc/buildkit/config.toml
-sudo echo '  insecure = true' >> /etc/buildkit/config.toml
+sudo echo 'insecure-entitlements = [' > /etc/buildkit/buildkitd.toml
+sudo echo '  "network.host",' >> /etc/buildkit/buildkitd.toml
+sudo echo '  "security.insecure"' >> /etc/buildkit/buildkitd.toml
+sudo echo ']' >> /etc/buildkit/buildkitd.toml
+sudo echo '[registry."docker.io"]' >> /etc/buildkit/buildkitd.toml
+sudo echo '  mirrors = [' >> /etc/buildkit/buildkitd.toml
+sudo echo '    "'"$docker_proxy"'"' >> /etc/buildkit/buildkitd.toml
+sudo echo '  ]' >> /etc/buildkit/buildkitd.toml
+sudo echo '[registry."'"$docker_proxy"'"]' >> /etc/buildkit/buildkitd.toml
+sudo echo '  http = true' >> /etc/buildkit/buildkitd.toml
+sudo echo '  insecure = true' >> /etc/buildkit/buildkitd.toml
 
 sudo service docker restart
-docker buildx create --driver=docker-container --config=/etc/buildkit/buildkitd.toml --name buildkit
+docker buildx create --driver=docker-container --driver-opt=image=moby/buildkit@sha256:8a45f8c8fcfb0f38e7380d7d9fc728219d2fdf43fd02aee60a2a6723d89abdea --config=/etc/buildkit/buildkitd.toml --name=buildkit
 
 ## Configure the runner
 
