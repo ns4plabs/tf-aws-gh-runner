@@ -1,59 +1,5 @@
 locals {
   registries = {
-    cache = {
-      environment = [
-        {
-          name = "REGISTRY_STORAGE"
-          value = <<-EOT
-            s3:
-              region: us-east-1
-              # TODO: consider using dedicated bucket
-              bucket: tf-aws-gh-runner
-              rootdirectory: /docker/cache/v0
-            delete:
-              enabled: false
-            redirect:
-              disable: false
-            maintenance:
-              uploadpurging:
-                enabled: false
-              readonly:
-                enabled: false
-          EOT
-        },
-        {
-          name = "REGISTRY_HTTP"
-          value = <<-EOT
-            addr: :5000
-            secret: tf-aws-gh-runner-docker-cache-v0
-          EOT
-        },
-        {
-          name = "REGISTRY_HEALTH"
-          value = <<-EOT
-            storagedriver:
-              enabled: false
-          EOT
-        },
-        {
-          name = "REGISTRY_LOG"
-          value = <<-EOT
-            level: debug
-            formatter: json
-          EOT
-        },
-        {
-          name = "REGISTRY_REDIS"
-          value = <<-EOT
-          EOT
-        },
-        {
-          name = "REGISTRY_NOTIFICATIONS"
-          value = <<-EOT
-          EOT
-        }
-      ]
-    }
     proxy = {
       environment = [
         {
@@ -420,7 +366,38 @@ resource "aws_iam_role_policy" "shared_ssm" {
         Resource = [
           "arn:aws:ssm:${data.aws_region.default.name}:${data.aws_caller_identity.current.account_id}:parameter/tf-aws-gh-runner/*"
         ]
-      }
+      },
+      {
+        Sid = "AllowLimitedGetPut"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectAcl",
+          "s3:PutObject",
+          "s3:PutObjectAcl",
+          "s3:DeleteObject",
+          "s3:ListMultipartUploadParts",
+          "s3:AbortMultipartUpload"
+        ]
+        Effect   = "Allow"
+        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}/docker/cache/*"]
+      },
+      {
+        Sid = "AllowLimitedList"
+        Action = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:ListBucketMultipartUploads"
+        ]
+        Effect   = "Allow"
+        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}"]
+        Condition = {
+          StringLike: {
+            "s3:prefix" = [
+              "docker/cache/*",
+            ]
+          }
+        }
+      },
     ]
   })
 }

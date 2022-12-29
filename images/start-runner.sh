@@ -47,11 +47,31 @@ echo "Retrieved docker parameters from AWS SSM ($parameters)"
 docker_proxy=$(echo "$docker_parameters" | jq -r '.[] | select(.Name == "/tf-aws-gh-runner/docker/proxy_aws_lb_dns_name") | .Value')
 echo "Retrieved /tf-aws-gh-runner/docker/proxy_aws_lb_dns_name parameter - ($docker_proxy)"
 
-docker_cache=$(echo "$docker_parameters" | jq -r '.[] | select(.Name == "/tf-aws-gh-runner/docker/cache_aws_lb_dns_name") | .Value')
-echo "Retrieved /tf-aws-gh-runner/docker/cache_aws_lb_dns_name parameter - ($docker_cache)"
+sudo mkdir -p /etc/docker
+sudo echo '{' > /etc/docker/daemon.json
+sudo echo '  "insecure-registries": [' >> /etc/docker/daemon.json
+sudo echo '    "'"$docker_proxy"'"' >> /etc/docker/daemon.json
+sudo echo '  ],' >> /etc/docker/daemon.json
+sudo echo '  "registry-mirrors": [' >> /etc/docker/daemon.json
+sudo echo '    "'"http://$docker_proxy"'"' >> /etc/docker/daemon.json
+sudo echo '  ]' >> /etc/docker/daemon.json
+sudo echo '}' >> /etc/docker/daemon.json
 
-sudo echo '{"insecure-registries": ["'"$docker_proxy"'", "'"$docker_cache"'"], "registry-mirrors": ["'"http://$docker_proxy"'"]}' > /etc/docker/daemon.json
+sudo mkdir -p /etc/buildkit
+sudo echo 'insecure-entitlements = [' > /etc/buildkit/config.toml
+sudo echo '  "network.host",' >> /etc/buildkit/config.toml
+sudo echo '  "security.insecure"' >> /etc/buildkit/config.toml
+sudo echo ']' >> /etc/buildkit/config.toml
+sudo echo '[registry."docker.io"]' >> /etc/buildkit/config.toml
+sudo echo '  mirrors = [' >> /etc/buildkit/config.toml
+sudo echo '    "'"$docker_proxy"'"' >> /etc/buildkit/config.toml
+sudo echo '  ]' >> /etc/buildkit/config.toml
+sudo echo '[registry."'"$docker_proxy"'"]' >> /etc/buildkit/config.toml
+sudo echo '  http = true' >> /etc/buildkit/config.toml
+sudo echo '  insecure = true' >> /etc/buildkit/config.toml
+
 sudo service docker restart
+docker buildx create --driver=docker-container --config=/etc/buildkit/buildkitd.toml --name buildkit
 
 ## Configure the runner
 
