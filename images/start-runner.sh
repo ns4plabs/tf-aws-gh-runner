@@ -71,7 +71,6 @@ sudo echo '  http = true' >> /etc/buildkit/buildkitd.toml
 sudo echo '  insecure = true' >> /etc/buildkit/buildkitd.toml
 
 sudo service docker restart
-docker buildx create --driver=docker-container --driver-opt=image=moby/buildkit@sha256:8a45f8c8fcfb0f38e7380d7d9fc728219d2fdf43fd02aee60a2a6723d89abdea --config=/etc/buildkit/buildkitd.toml --name=buildkit
 
 ## Configure the runner
 

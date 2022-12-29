@@ -20,6 +20,8 @@ runs:
       INPUTS_NAME: ${{ inputs.name }}
     with:
       script: |
+        # NOTE: created here because buildx instances are per user
+        await exec.exec('docker buildx create --driver=docker-container --driver-opt=image=moby/buildkit@sha256:8a45f8c8fcfb0f38e7380d7d9fc728219d2fdf43fd02aee60a2a6723d89abdea --config=/etc/buildkit/buildkitd.toml --name=buildkit')
         await exec.exec('docker buildx use buildkit')
         await exec.exec('docker buildx inspect --bootstrap')
 
