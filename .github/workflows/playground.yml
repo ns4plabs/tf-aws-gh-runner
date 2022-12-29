@@ -12,13 +12,11 @@ jobs:
       - id: docker-cache
         uses: ./.github/actions/docker-cache
       - run: |
+          echo "FROM ubuntu:latest" > Dockerfile
+          echo "RUN sleep 60" >> Dockerfile
+      - run: |
           docker build --help
         shell: bash
       - run: |
           docker build --cache-from=${{ steps.docker-cache.outputs.from }} --cache-to=${{ steps.docker-cache.outputs.to }} .
-        working-directory: lambdas/registry
-        shell: bash
-      - run: |
-          docker build --cache-from=${{ steps.docker-cache.outputs.from }} --cache-to=${{ steps.docker-cache.outputs.to }} .
-        working-directory: lambdas/registry
         shell: bash
