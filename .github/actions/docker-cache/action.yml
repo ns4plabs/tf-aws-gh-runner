@@ -2,7 +2,7 @@ name: Docker Cache
 description: Retrieve docker cache configuration
 inputs:
   name:
-    description: 'The name of the tag to use for caching docker blobs and manifests'
+    description: 'The name under which docker blobs and manifests should be cached'
     required: false
 outputs:
   to:
@@ -11,6 +11,12 @@ outputs:
   from:
     description: 'The CSV value of the docker build --cache-from parameter'
     value: ${{ fromJSON(steps.cache.outputs.result).from }}
+  instance:
+    description: 'The name of the buildx instance'
+    value: ${{ fromJSON(steps.cache.outputs.result).instance }}
+  container:
+    description: 'The name of the buildx/buildkit container'
+    value: buildx_buildkit_${{ fromJSON(steps.cache.outputs.result).instance }}0
 runs:
   using: composite
   steps:
@@ -21,8 +27,8 @@ runs:
     with:
       script: |
         # NOTE: created here because buildx instances are per user
-        await exec.exec('docker buildx create --driver=docker-container --driver-opt=image=moby/buildkit@sha256:8a45f8c8fcfb0f38e7380d7d9fc728219d2fdf43fd02aee60a2a6723d89abdea --config=/etc/buildkit/buildkitd.toml --name=buildkit')
-        await exec.exec('docker buildx use buildkit')
+        const instance = await exec.getExecOutput('docker buildx create --driver=docker-container --driver-opt=image=moby/buildkit@sha256:8a45f8c8fcfb0f38e7380d7d9fc728219d2fdf43fd02aee60a2a6723d89abdea --config=/etc/buildkit/buildkitd.toml')
+        await exec.exec(`docker buildx use ${instance}`)
         await exec.exec('docker buildx inspect --bootstrap')
 
         const callerIdentity = await exec.getExecOutput('aws sts get-caller-identity');
@@ -33,6 +39,7 @@ runs:
 
         return {
           to: `type=s3,mode=max,prefix=${prefix},bucket=tf-aws-gh-runner,region=us-east-1,name=${name}`,
-          from: `type=s3,prefix=${prefix},bucket=tf-aws-gh-runner,region=us-east-1,name=${name}`
+          from: `type=s3,prefix=${prefix},bucket=tf-aws-gh-runner,region=us-east-1,name=${name}`,
+          instance: instance
         }
       result-encoding: json

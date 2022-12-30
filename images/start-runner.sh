@@ -42,7 +42,7 @@ fi
 ## Configure docker registries
 
 docker_parameters=$(aws ssm get-parameters-by-path --path "/tf-aws-gh-runner/docker" --region "$region" --query "Parameters[*].{Name:Name,Value:Value}")
-echo "Retrieved docker parameters from AWS SSM ($parameters)"
+echo "Retrieved docker parameters from AWS SSM ($docker_parameters)"
 
 docker_proxy=$(echo "$docker_parameters" | jq -r '.[] | select(.Name == "/tf-aws-gh-runner/docker/proxy_aws_lb_dns_name") | .Value')
 echo "Retrieved /tf-aws-gh-runner/docker/proxy_aws_lb_dns_name parameter - ($docker_proxy)"
