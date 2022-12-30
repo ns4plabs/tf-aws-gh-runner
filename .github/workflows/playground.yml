@@ -12,7 +12,7 @@ jobs:
       - id: docker-cache
         uses: ./.github/actions/docker-cache
       - run: |
-          docker buildx build --load . --cache-from=${steps.docker-cache.outputs.from} --cache-to=${steps.docker-cache.outputs.to} -f-<<EOF
+          docker buildx build --load . --cache-from=${{steps.docker-cache.outputs.from}} --cache-to=${{steps.docker-cache.outputs.to}} -f-<<EOF
           FROM ubuntu
           RUN echo "hello world"
           EOF
