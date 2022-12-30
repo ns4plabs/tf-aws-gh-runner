@@ -28,7 +28,7 @@ runs:
       script: |
         // NOTE: created here because buildx instances are per user
         const instance = await exec.getExecOutput('docker buildx create --driver=docker-container --driver-opt=image=moby/buildkit@sha256:8a45f8c8fcfb0f38e7380d7d9fc728219d2fdf43fd02aee60a2a6723d89abdea --config=/etc/buildkit/buildkitd.toml')
-        await exec.exec(`docker buildx use ${instance}`)
+        await exec.exec(`docker buildx use ${instance.stdout}`)
         await exec.exec('docker buildx inspect --bootstrap')
 
         const callerIdentity = await exec.getExecOutput('aws sts get-caller-identity');
@@ -40,6 +40,6 @@ runs:
         return {
           to: `type=s3,mode=max,prefix=${prefix},bucket=tf-aws-gh-runner,region=us-east-1,name=${name}`,
           from: `type=s3,prefix=${prefix},bucket=tf-aws-gh-runner,region=us-east-1,name=${name}`,
-          instance: instance
+          instance: instance.stdout
         }
       result-encoding: json
