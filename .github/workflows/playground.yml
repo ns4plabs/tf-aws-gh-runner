@@ -2,18 +2,15 @@ name: Playground
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/playground.yml
 
 jobs:
   run:
     name: Run
     runs-on: [self-hosted, linux, x64, test-plans]
     steps:
-      - uses: actions/checkout@v3
-      - id: docker-cache
-        uses: ./.github/actions/docker-cache
       - run: |
-          docker buildx build --load . --cache-from=${{steps.docker-cache.outputs.from}} --cache-to=${{steps.docker-cache.outputs.to}} -f-<<EOF
-          FROM ubuntu
-          RUN echo "hello world"
-          EOF
+          docker buildx version
         shell: bash
