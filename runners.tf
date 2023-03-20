@@ -28,7 +28,7 @@ module "runners" {
     "test-plans" = {
       runner_os = "linux"
       runner_architecture = "x64"
-      instance_types = ["m5.large"]
+      instance_types = ["c5.4xlarge"]
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/test-plans", "libp2p/test-plans"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
