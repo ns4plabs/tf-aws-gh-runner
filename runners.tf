@@ -8,7 +8,7 @@ module "runners" {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo", "ipfs/kubo"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202212300856-kubo"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304081145-default"] }
       ami_owners = ["642361402189"]
       enabled_userdata = false
       enable_runner_binaries_syncer = false
@@ -34,8 +34,7 @@ module "runners" {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "ipfs/boxo"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      # TODO: change to an AMI built specifically for boxo
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202212300856-kubo"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304081145-default"] }
       ami_owners = ["642361402189"]
       enabled_userdata = false
       enable_runner_binaries_syncer = false
