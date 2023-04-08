@@ -46,7 +46,7 @@ variable "post_install_custom_shell_commands" {
 variable "runner_version" {
   description = "The version (no v prefix) of the runner software to install https://github.com/actions/runner/releases"
   type        = string
-  default     = "2.298.2"
+  default     = "2.303.0"
 }
 
 source "amazon-ebs" "githubrunner" {
@@ -120,6 +120,17 @@ build {
       "unzip awscliv2.zip",
       "sudo ./aws/install",
     ], var.custom_shell_commands)
+  }
+
+  provisioner "file" {
+    content = file("../sysctl.conf")
+    destination = "/tmp/sysctl.conf"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo mv /tmp/sysctl.conf /etc/sysctl.conf",
+    ]
   }
 
   provisioner "file" {
