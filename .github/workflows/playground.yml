@@ -11,5 +11,5 @@ jobs:
     name: Run
     runs-on: [self-hosted, linux, x64, 2xlarge]
     steps:
-      - run: sysctl -a
+      - run: ethtool -g ens5
         shell: bash
