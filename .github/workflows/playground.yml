@@ -9,8 +9,7 @@ on:
 jobs:
   run:
     name: Run
-    runs-on: [self-hosted, linux, x64, test-plans]
+    runs-on: [self-hosted, linux, x64, 2xlarge]
     steps:
-      - run: |
-          docker buildx version
+      - run: sysctl -a
         shell: bash
