@@ -44,6 +44,8 @@ fi
 docker_parameters=$(aws ssm get-parameters-by-path --path "/tf-aws-gh-runner/docker" --region "$region" --query "Parameters[*].{Name:Name,Value:Value}")
 echo "Retrieved docker parameters from AWS SSM ($docker_parameters)"
 
+### Docker Registry Proxy
+
 docker_proxy=$(echo "$docker_parameters" | jq -r '.[] | select(.Name == "/tf-aws-gh-runner/docker/proxy_aws_lb_dns_name") | .Value')
 echo "Retrieved /tf-aws-gh-runner/docker/proxy_aws_lb_dns_name parameter - ($docker_proxy)"
 
@@ -71,6 +73,13 @@ sudo echo '  http = true' >> /etc/buildkit/buildkitd.toml
 sudo echo '  insecure = true' >> /etc/buildkit/buildkitd.toml
 
 sudo service docker restart
+
+### Go Modules Proxy
+
+goproxy=$(echo "$docker_parameters" | jq -r '.[] | select(.Name == "/tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name") | .Value')
+echo "Retrieved /tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name parameter - ($goproxy)"
+
+export GOPROXY="http://$goproxy,direct"
 
 ## Configure the runner
 
@@ -100,9 +109,6 @@ chown -R $run_as .
 
 echo "Configure GH Runner as user $run_as"
 sudo --preserve-env=RUNNER_ALLOW_RUNASROOT -u "$run_as" -- ./config.sh --unattended --name "$instance_id" --work "_work" $${config}
-
-echo "Setting GOPROXY"
-export GOPROXY="https://proxy.golang.org|direct"
 
 ## Start the runner
 echo "Starting runner after $(awk '{print int($1/3600)":"int(($1%3600)/60)":"int($1%60)}' /proc/uptime)"

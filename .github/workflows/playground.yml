@@ -7,9 +7,37 @@ on:
       - .github/workflows/playground.yml
 
 jobs:
-  run:
-    name: Run
-    runs-on: [self-hosted, linux, x64, 2xlarge]
+  Run:
+    strategy:
+      fail-fast: false
+      matrix:
+        iterator: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    runs-on: [self-hosted, linux, x64, playground]
+    name: Run (${{ matrix.iterator }})
     steps:
-      - run: ethtool -g ens5
-        shell: bash
+      - uses: actions/checkout@v3
+        with:
+          repository: ipfs/boxo
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.x
+      # - run: ethtool -g ens5
+      # - run: ip a
+      - run: sudo tcpdump -i ens5 -vnnlp -s96 -w capture.pcap > /dev/null 2>&1 &
+      # - run: sudo ethtool -G ens5 rx 16384 tx 1024
+      # - run: sudo ip -6 address change $(ip -6 address show dev ens5 | grep inet6 | head -1 | awk '{print $2}') preferred_lft forever valid_lft forever dev ens5
+      # - run: sudo ip link set dev ens5 mtu 1500
+      # - run: ethtool -g ens5
+      - run: ip a
+      # - run: sudo iptables -L -v -n
+      - run: echo "$GOPROXY"
+      - name: go mod download
+        uses: protocol/multiple-go-modules@v1.2
+        with:
+          run: go mod download -x
+      - if: failure()
+        name: Upload tcpdump
+        uses: actions/upload-artifact@v2
+        with:
+          name: tcpdump-${{ matrix.iterator }}
+          path: capture.pcap

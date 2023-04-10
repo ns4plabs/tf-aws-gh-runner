@@ -1,6 +1,33 @@
 locals {
   registries = {
+    goproxy = {
+      port = 3000
+      image     = "gomods/athens@sha256:0f1547a80a2e034a96f1c9f3b652317834d3f2086b4011ec164a93fa16d23bdb"
+      s3_bucket = "tf-aws-gh-runner-docker-goproxy"
+      environment = [
+        {
+          name = "AWS_REGION"
+          value = "us-east-1"
+        },
+        {
+          name = "AWS_USE_DEFAULT_CONFIGURATION"
+          value = "true"
+        },
+        {
+          name = "ATHENS_STORAGE_TYPE"
+          value = "s3"
+        },
+        {
+          name = "ATHENS_S3_BUCKET_NAME"
+          value = "tf-aws-gh-runner-docker-goproxy"
+        }
+      ]
+    }
     proxy = {
+      port = 5000
+      # TODO: change to public ECR image; it'll require access to ECR on the exec role
+      # WARN: Why edge instead of registry:2.8.1? https://github.com/distribution/distribution/issues/3645#issuecomment-1347430516
+      image     = "distribution/distribution@sha256:43300dba89e7432db97365a4cb2918017ae8c08afb3d72fff0cb92db674bbc17"
       environment = [
         {
           name = "REGISTRY_STORAGE"
@@ -96,8 +123,8 @@ resource "aws_security_group" "docker" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    from_port        = 5000
-    to_port          = 5000
+    from_port        = each.value.port
+    to_port          = each.value.port
     protocol         = "tcp"
     security_groups = [aws_security_group.docker_lb.id]
   }
@@ -159,6 +186,8 @@ resource "aws_lb_target_group" "docker" {
 resource "aws_ecs_task_definition" "docker" {
   for_each = local.registries
 
+  depends_on = [aws_iam_role_policy.docker_s3, aws_iam_role_policy.docker_private_s3]
+
   family                   = "docker-${each.key}"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
@@ -170,17 +199,15 @@ resource "aws_ecs_task_definition" "docker" {
   container_definitions = jsonencode([
     {
       name      = "docker-${each.key}"
-      # TODO: change to public ECR image; it'll require access to ECR on the exec role
-      # WARN: Why edge instead of registry:2.8.1? https://github.com/distribution/distribution/issues/3645#issuecomment-1347430516
-      image     = "distribution/distribution@sha256:43300dba89e7432db97365a4cb2918017ae8c08afb3d72fff0cb92db674bbc17"
+      image     = each.value.image
       cpu       = 1024
       memory    = 2048
       essential = true
       networkMode = "awsvpc"
       portMappings = [
         {
-          containerPort = 5000
-          hostPort      = 5000
+          containerPort = each.value.port
+          hostPort      = each.value.port
         }
       ]
       environment = each.value.environment
@@ -219,7 +246,7 @@ resource "aws_ecs_service" "docker" {
   load_balancer {
     target_group_arn = aws_lb_target_group.docker[each.key].id
     container_name   = "docker-${each.key}"
-    container_port   = 5000
+    container_port   = each.value.port
   }
 
   depends_on = [aws_lb_listener.docker]
@@ -300,8 +327,80 @@ resource "aws_iam_role_policy" "docker_logging" {
   })
 }
 
+# S3
+
+resource "aws_s3_bucket" "docker" {
+  for_each = {for k, v in local.registries : k => v if contains(keys(v), "s3_bucket")}
+
+  bucket = each.value.s3_bucket
+
+  tags = {
+    Name = "Terraform AWS GitHub Runner"
+    Url  = "https://github.com/pl-strflt/tf-aws-gh-runner"
+  }
+}
+
+resource "aws_s3_bucket_acl" "docker" {
+  for_each = {for k, v in local.registries : k => v if contains(keys(v), "s3_bucket")}
+
+  bucket = aws_s3_bucket.docker[each.key].id
+  acl    = "private"
+}
+
+
+resource "aws_s3_bucket_lifecycle_configuration" "docker" {
+  for_each = {for k, v in local.registries : k => v if contains(keys(v), "s3_bucket")}
+
+  bucket = aws_s3_bucket.docker[each.key].id
+
+  rule {
+    id      = "default"
+    expiration {
+      days = 30
+    }
+    status = "Enabled"
+  }
+}
+
+resource "aws_iam_role_policy" "docker_private_s3" {
+  for_each = {for k, v in local.registries : k => v if contains(keys(v), "s3_bucket")}
+
+  name = "s3-policy-tf-aws-gh-runner-docker-proxy"
+  role = aws_iam_role.docker[each.key].name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid = "AllowLimitedGetPut"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectAcl",
+          "s3:PutObject",
+          "s3:PutObjectAcl",
+          "s3:DeleteObject",
+          "s3:ListMultipartUploadParts",
+          "s3:AbortMultipartUpload"
+        ]
+        Effect   = "Allow"
+        Resource = ["${aws_s3_bucket.docker[each.key].arn}/*"]
+      },
+      {
+        Sid = "AllowLimitedList"
+        Action = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:ListBucketMultipartUploads"
+        ]
+        Effect   = "Allow"
+        Resource = ["${aws_s3_bucket.docker[each.key].arn}"]
+      },
+    ]
+  })
+}
+
 resource "aws_iam_role_policy" "docker_s3" {
-  for_each = local.registries
+  for_each = {for k, v in local.registries : k => v if !contains(keys(v), "s3_bucket")}
 
   name = "s3-policy-tf-aws-gh-runner-docker-${each.key}"
   role = aws_iam_role.docker[each.key].name
