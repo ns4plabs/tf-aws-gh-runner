@@ -22,6 +22,10 @@ locals {
         {
           name = "ATHENS_S3_BUCKET_NAME"
           value = "tf-aws-gh-runner-docker-goproxy"
+        },
+        {
+          name = "ATHENS_DOWNLOAD_MODE"
+          value = "async"
         }
       ]
     }
