@@ -4,6 +4,8 @@ locals {
       port = 3000
       image     = "gomods/athens@sha256:0f1547a80a2e034a96f1c9f3b652317834d3f2086b4011ec164a93fa16d23bdb"
       s3_bucket = "tf-aws-gh-runner-docker-goproxy"
+      cpu = 16
+      memory = 32
       environment = [
         {
           name = "AWS_REGION"
@@ -28,6 +30,8 @@ locals {
       # TODO: change to public ECR image; it'll require access to ECR on the exec role
       # WARN: Why edge instead of registry:2.8.1? https://github.com/distribution/distribution/issues/3645#issuecomment-1347430516
       image     = "distribution/distribution@sha256:43300dba89e7432db97365a4cb2918017ae8c08afb3d72fff0cb92db674bbc17"
+      cpu = 1
+      memory = 2
       environment = [
         {
           name = "REGISTRY_STORAGE"
@@ -191,8 +195,8 @@ resource "aws_ecs_task_definition" "docker" {
   family                   = "docker-${each.key}"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = 1024
-  memory                   = 2048
+  cpu                      = each.value.cpu * 1024
+  memory                   = each.value.memory * 1024
   execution_role_arn       = aws_iam_role.docker_exec[each.key].arn
   task_role_arn            = aws_iam_role.docker[each.key].arn
 
@@ -200,8 +204,8 @@ resource "aws_ecs_task_definition" "docker" {
     {
       name      = "docker-${each.key}"
       image     = each.value.image
-      cpu       = 1024
-      memory    = 2048
+      cpu       = each.value.cpu * 1024
+      memory    = each.value.memory * 1024
       essential = true
       networkMode = "awsvpc"
       portMappings = [
