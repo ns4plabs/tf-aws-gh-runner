@@ -8,36 +8,11 @@ on:
 
 jobs:
   Run:
-    strategy:
-      fail-fast: false
-      matrix:
-        iterator: [1, 2]
     runs-on: [self-hosted, linux, x64, playground]
-    name: Run (${{ matrix.iterator }})
+    name: Run
     steps:
-      - uses: actions/checkout@v3
-        with:
-          repository: ipfs/kubo
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.x
-      # - run: ethtool -g ens5
-      # - run: ip a
-      - run: sudo tcpdump -i ens5 -vnnlp -s96 -w capture.pcap > /dev/null 2>&1 &
-      # - run: sudo ethtool -G ens5 rx 16384 tx 1024
-      # - run: sudo ip -6 address change $(ip -6 address show dev ens5 | grep inet6 | head -1 | awk '{print $2}') preferred_lft forever valid_lft forever dev ens5
-      # - run: sudo ip link set dev ens5 mtu 1500
-      # - run: ethtool -g ens5
-      - run: ip a
-      # - run: sudo iptables -L -v -n
-      - run: echo "$GOPROXY"
-      - name: go mod download
-        uses: protocol/multiple-go-modules@v1.2
-        with:
-          run: go mod download -x
-      - if: failure()
-        name: Upload tcpdump
-        uses: actions/upload-artifact@v2
-        with:
-          name: tcpdump-${{ matrix.iterator }}
-          path: capture.pcap
+      - run: go mod init example.com/m
+      - run: go get github.com/libp2p/go-libp2p-kad-dht@v0.20.1-0.20230209220319-6c2045abad23
