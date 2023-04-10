@@ -11,13 +11,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        iterator: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        iterator: [1, 2]
     runs-on: [self-hosted, linux, x64, playground]
     name: Run (${{ matrix.iterator }})
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: ipfs/boxo
+          repository: libp2p/go-libp2p
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.x
