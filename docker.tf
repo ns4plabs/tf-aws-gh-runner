@@ -26,6 +26,10 @@ locals {
         {
           name = "ATHENS_DOWNLOAD_MODE"
           value = "async"
+        },
+        {
+          name = "ATHENS_GO_BINARY_ENV_VARS"
+          value = "GOPROXY=https://proxy.golang.org,direct"
         }
       ]
     }
