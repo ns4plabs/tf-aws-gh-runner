@@ -8,11 +8,15 @@ on:
 
 jobs:
   Run:
-    runs-on: [self-hosted, linux, x64, playground]
+    runs-on: ['self-hosted', 'linux', 'x64', '2xlarge']
     name: Run
     steps:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.x
-      - run: go mod init example.com/m
-      - run: go get github.com/libp2p/go-libp2p-kad-dht@v0.20.1-0.20230209220319-6c2045abad23
+      - uses: actions/checkout@v3
+        with:
+          repository: libp2p/go-libp2p
+      - uses: protocol/multiple-go-modules@v1.2
+        with:
+          run: go mod download -x
