@@ -26,41 +26,15 @@ module "runners" {
         snapshot_id           = null
       }]
     }
-    "boxo" = {
-      runner_extra_labels = "boxo"
-      runner_os = "linux"
-      runner_architecture = "x64"
-      instance_types = ["c5.2xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "ipfs/boxo"]
-      runners_maximum_count = 20
-      instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304100745-default"] }
-      ami_owners = ["642361402189"]
-      enabled_userdata = false
-      enable_runner_binaries_syncer = false
-      enable_runner_detailed_monitoring = true
-      runner_run_as = "ubuntu"
-      block_device_mappings = [{
-        device_name           = "/dev/sda1"
-        delete_on_termination = true
-        volume_type           = "io2"
-        volume_size           = 100
-        encrypted             = true
-        iops                  = 2500
-        throughput            = null
-        kms_key_id            = null
-        snapshot_id           = null
-      }]
-    }
     "linux-x64-4xlarge" = {
       runner_extra_labels = "4xlarge"
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.4xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "ipfs/kubo", "ipfs/boxo", "libp2p/test-plans"]
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "ipfs/kubo", "ipfs/boxo", "libp2p/test-plans", "libp2p/rust-libp2p"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304100745-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304121931-default"] }
       ami_owners = ["642361402189"]
       enabled_userdata = false
       enable_runner_binaries_syncer = false
@@ -86,7 +60,7 @@ module "runners" {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "ipfs/kubo", "ipfs/boxo", "libp2p/go-libp2p", "quic-go/quic-go"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304100745-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304121931-default"] }
       ami_owners = ["642361402189"]
       enabled_userdata = false
       enable_runner_binaries_syncer = false
@@ -112,7 +86,7 @@ module "runners" {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/rust-libp2p"]
       runners_maximum_count = 50
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304100745-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304121931-default"] }
       ami_owners = ["642361402189"]
       enabled_userdata = false
       enable_runner_binaries_syncer = false
@@ -138,7 +112,7 @@ module "runners" {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304100745-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304121931-default"] }
       ami_owners = ["642361402189"]
       enabled_userdata = false
       enable_runner_binaries_syncer = false
