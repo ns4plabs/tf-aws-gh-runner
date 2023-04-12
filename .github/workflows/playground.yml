@@ -8,15 +8,8 @@ on:
 
 jobs:
   Run:
-    runs-on: ['self-hosted', 'linux', 'x64', '2xlarge']
+    runs-on: ['self-hosted', 'linux', 'x64', 'large']
     name: Run
     steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.19.x
-      - uses: actions/checkout@v3
-        with:
-          repository: libp2p/go-libp2p
-      - uses: protocol/multiple-go-modules@v1.2
-        with:
-          run: go mod download -x
+      - run: cmake
+        shell: bash
