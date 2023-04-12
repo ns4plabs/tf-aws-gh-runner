@@ -104,6 +104,32 @@ module "runners" {
         snapshot_id           = null
       }]
     }
+    "linux-x64-large" = {
+      runner_extra_labels = "large"
+      runner_os = "linux"
+      runner_architecture = "x64"
+      instance_types = ["c5.large"]
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/rust-libp2p"]
+      runners_maximum_count = 50
+      instance_target_capacity_type = "on-demand"
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304100745-default"] }
+      ami_owners = ["642361402189"]
+      enabled_userdata = false
+      enable_runner_binaries_syncer = false
+      enable_runner_detailed_monitoring = true
+      runner_run_as = "ubuntu"
+      block_device_mappings = [{
+        device_name           = "/dev/sda1"
+        delete_on_termination = true
+        volume_type           = "gp3"
+        volume_size           = 100
+        encrypted             = true
+        iops                  = null
+        throughput            = null
+        kms_key_id            = null
+        snapshot_id           = null
+      }]
+    }
     "playground" = {
       runner_extra_labels = "playground"
       runner_os = "linux"
@@ -121,10 +147,10 @@ module "runners" {
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
-        volume_type           = "io2"
+        volume_type           = "gp3"
         volume_size           = 100
         encrypted             = true
-        iops                  = 2500
+        iops                  = null
         throughput            = null
         kms_key_id            = null
         snapshot_id           = null
