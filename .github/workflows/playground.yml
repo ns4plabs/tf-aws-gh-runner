@@ -7,9 +7,25 @@ on:
       - .github/workflows/playground.yml
 
 jobs:
-  Run:
-    runs-on: ['self-hosted', 'linux', 'x64', 'large']
-    name: Run
+  crosscompile:
+    strategy:
+      fail-fast: false
+      matrix:
+        go: [ "1.19.x", "1.20.x" ]
+    runs-on: ['self-hosted', 'linux', 'x64', '2xlarge']
+    name: "Cross Compilation (Go ${{matrix.go}})"
     steps:
-      - run: cmake
-        shell: bash
+      - uses: actions/checkout@v3
+        with:
+          repository: quic-go/quic-go
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Install build utils
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib
+      - name: Install dependencies
+        run: go build example/main.go
+      - name: Run cross compilation
+        run: .github/workflows/cross-compile.sh
