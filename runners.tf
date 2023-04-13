@@ -83,7 +83,7 @@ module "runners" {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.xlarge", "m5.xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/rust-libp2p"]
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/rust-libp2p", "quic-go/quic-go"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304130748-default"] }
