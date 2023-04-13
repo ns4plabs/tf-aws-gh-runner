@@ -3,7 +3,7 @@
 #   packer build -var-file="./default.pkrvars.hcl" .
 
 custom_shell_commands = [
-  "sudo apt-get -y install build-essential docker-compose-plugin default-jdk cmake",
+  "sudo apt-get -y install build-essential docker-compose-plugin default-jdk cmake libclang-dev",
   "sudo apt remove unattended-upgrades -y",
 ]
 
