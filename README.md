@@ -7,9 +7,9 @@ This project uses [terraform-aws-github-runner](https://github.com/philips-labs/
 | Name | OS | Architecture | Instance Type | AMI |
 | --- | --- | --- | --- | --- |
 | kubo | linux | x64 | [c5.4xlarge](https://instances.vantage.sh/?selected=c5.4xlarge) | `github-runner-ubuntu-jammy-amd64-202212300856-kubo` built with [kubo.pkrvars](images/ubuntu-jammy/kubo.pkrvars.hcl) |
-| 4xlarge | linux | x64 | [c5.4xlarge](https://instances.vantage.sh/?selected=c5.4xlarge) | `github-runner-ubuntu-jammy-amd64-202304121931-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
-| 2xlarge | linux | x64 | [c5.2xlarge](https://instances.vantage.sh/?selected=c5.2xlarge) | `github-runner-ubuntu-jammy-amd64-202304121931-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
-| large | linux | x64 | [c5.large](https://instances.vantage.sh/?selected=c5.large) | `github-runner-ubuntu-jammy-amd64-202304121931-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
+| 4xlarge | linux | x64 | [c5.4xlarge](https://instances.vantage.sh/?selected=c5.4xlarge) | `github-runner-ubuntu-jammy-amd64-202304122049-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
+| 2xlarge | linux | x64 | [c5.2xlarge](https://instances.vantage.sh/?selected=c5.2xlarge) | `github-runner-ubuntu-jammy-amd64-202304122049-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
+| large | linux | x64 | [c5.large](https://instances.vantage.sh/?selected=c5.large) | `github-runner-ubuntu-jammy-amd64-202304122049-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
 
 ## Usage
 

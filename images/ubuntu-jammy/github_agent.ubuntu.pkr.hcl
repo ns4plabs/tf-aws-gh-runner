@@ -133,12 +133,6 @@ build {
     ]
   }
 
-  provisioner "shell" {
-    inline = [
-      "sudo apt remove unattended-upgrades -y",
-    ]
-  }
-
   provisioner "file" {
     content = templatefile("../install-runner.sh", {
       ARM_PATCH                       = ""
