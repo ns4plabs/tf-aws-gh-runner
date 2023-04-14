@@ -5,43 +5,79 @@ on:
   push:
     paths:
       - .github/workflows/playground.yml
-
+      
 jobs:
-  integration:
+  unit:
     strategy:
       fail-fast: false
       matrix:
-        go: [ "1.19.x", "1.20.x" ]
-    runs-on: ['self-hosted', 'linux', 'x64', 'xlarge']
+        os: [ "ubuntu" ]
+        go: ["1.19.x","1.20.x"]
     env:
-      DEBUG: false # set this to true to export qlogs and save them as artifacts
-      TIMESCALE_FACTOR: 3
-    name: Integration Tests (Go ${{ matrix.go }})
+      GOTESTFLAGS: -shuffle=on -cover -coverprofile=module-coverage.txt -coverpkg=./...
+      GO386FLAGS: -shuffle=on
+      GORACEFLAGS: -shuffle=on
+    runs-on: ['self-hosted', 'linux', 'x64', 'playground']
+    name: ${{ matrix.os }} (go ${{ matrix.go }})
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: quic-go/quic-go
+          submodules: recursive
+      - id: config
+        uses: protocol/.github/.github/actions/read-config@master
       - uses: actions/setup-go@v3
         with:
-          stable: '!contains(${{ matrix.go }}, "beta") && !contains(${{ matrix.go }}, "rc")'
           go-version: ${{ matrix.go }}
-      - run: go version
-      - name: set qlogger
-        if: env.DEBUG == 'true'
-        run: echo "QLOGFLAG=-- -qlog" >> $GITHUB_ENV
-      - name: Run tests
+      - name: Go information
         run: |
-          go run github.com/onsi/ginkgo/v2/ginkgo -r -v -randomize-all -randomize-suites -trace -skip-package self integrationtests
-          go run github.com/onsi/ginkgo/v2/ginkgo -r -v -randomize-all -randomize-suites -trace integrationtests/self ${{ env.QLOGFLAG }}
+          go version
+          go env
+      - name: Use msys2 on windows
+        if: matrix.os == 'windows'
+        shell: bash
+        # The executable for msys2 is also called bash.cmd
+        #   https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md#shells
+        # If we prepend its location to the PATH
+        #   subsequent 'shell: bash' steps will use msys2 instead of gitbash
+        run: echo "C:/msys64/usr/bin" >> $GITHUB_PATH
+      - name: Run repo-specific setup
+        uses: ./.github/actions/go-test-setup
+        if: hashFiles('./.github/actions/go-test-setup') != ''
+      - name: Run tests
+        if: contains(fromJSON(steps.config.outputs.json).skipOSes, matrix.os) == false
+        uses: protocol/multiple-go-modules@v1.2
+        env:
+          GOFLAGS: ${{ format('{0} {1}', env.GOTESTFLAGS, env.GOFLAGS) }}
+        with:
+          run: go test -v ./...
       - name: Run tests (32 bit)
+        # can't run 32 bit tests on OSX.
+        if: matrix.os != 'macos' &&
+          fromJSON(steps.config.outputs.json).skip32bit != true &&
+          contains(fromJSON(steps.config.outputs.json).skipOSes, matrix.os) == false
+        uses: protocol/multiple-go-modules@v1.2
         env:
           GOARCH: 386
-        run: |
-          go run github.com/onsi/ginkgo/v2/ginkgo -r -v -randomize-all -randomize-suites -trace -skip-package self integrationtests
-          go run github.com/onsi/ginkgo/v2/ginkgo -r -v -randomize-all -randomize-suites -trace integrationtests/self ${{ env.QLOGFLAG }}
-      - name: save qlogs
-        if: ${{ always() && env.DEBUG == 'true' }}
-        uses: actions/upload-artifact@v2
+          GOFLAGS: ${{ format('{0} {1}', env.GO386FLAGS, env.GOFLAGS) }}
         with:
-          name: qlogs
-          path: integrationtests/self/*.qlog
+          run: |
+            export "PATH=$PATH_386:$PATH"
+            go test -v ./...
+      - name: Run tests with race detector
+        # speed things up. Windows and OSX VMs are slow
+        if: matrix.os == 'ubuntu' &&
+          contains(fromJSON(steps.config.outputs.json).skipOSes, matrix.os) == false
+        uses: protocol/multiple-go-modules@v1.2
+        env:
+          GOFLAGS: ${{ format('{0} {1}', env.GORACEFLAGS, env.GOFLAGS) }}
+        with:
+          run: go test -v -race ./...
+      - name: Collect coverage files
+        id: coverages
+        shell: bash
+        run: echo "files=$(find . -type f -name 'module-coverage.txt' | tr -s '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # v3.1.1
+        with:
+          files: ${{ steps.coverages.outputs.files }}
+          env_vars: OS=${{ matrix.os }}, GO=${{ matrix.go }}
