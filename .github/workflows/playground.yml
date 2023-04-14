@@ -17,7 +17,7 @@ jobs:
       GOTESTFLAGS: -shuffle=on -cover -coverprofile=module-coverage.txt -coverpkg=./...
       GO386FLAGS: -shuffle=on
       GORACEFLAGS: -shuffle=on
-    runs-on: ['self-hosted', 'linux', 'x64', 'playground']
+    runs-on: ['self-hosted', 'linux', 'x64', 'xlarge']
     name: ${{ matrix.os }} (go ${{ matrix.go }})
     steps:
       - uses: actions/checkout@v3
