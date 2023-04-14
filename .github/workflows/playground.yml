@@ -7,78 +7,91 @@ on:
       - .github/workflows/playground.yml
       
 jobs:
-  unit:
+  test:
+    name: Test ${{ matrix.crate }}
+    runs-on: ["self-hosted", "linux", "x64", "playground"]
     strategy:
       fail-fast: false
       matrix:
-        os: [ "ubuntu" ]
-        go: ["1.19.x","1.20.x"]
-    env:
-      GOTESTFLAGS: -shuffle=on -cover -coverprofile=module-coverage.txt -coverpkg=./...
-      GO386FLAGS: -shuffle=on
-      GORACEFLAGS: -shuffle=on
-    runs-on: ['self-hosted', 'linux', 'x64', 'xlarge']
-    name: ${{ matrix.os }} (go ${{ matrix.go }})
+        crate: ["libp2p", "libp2p-webrtc"]
     steps:
+      - name: Install Protoc
+        run: sudo apt-get install -y protobuf-compiler
+
+      - if: github.repository == 'libp2p/rust-libp2p'
+        uses: dtolnay/rust-toolchain@stable
+
       - uses: actions/checkout@v3
         with:
-          repository: ipfs/boxo
-          submodules: recursive
-      - id: config
-        uses: protocol/.github/.github/actions/read-config@master
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go }}
-      - name: Go information
+          repository: libp2p/rust-libp2p
+
+      - name: Get MSRV for ${{ matrix.crate }}
+        id: parse-msrv
+        env:
+          CRATE: ${{ matrix.crate }}
         run: |
-          go version
-          go env
-      - name: Use msys2 on windows
-        if: matrix.os == 'windows'
+          RUST_VERSION=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select(.name == env.CRATE) | .rust_version')
+          echo "version=${RUST_VERSION}" >> $GITHUB_OUTPUT
         shell: bash
-        # The executable for msys2 is also called bash.cmd
-        #   https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md#shells
-        # If we prepend its location to the PATH
-        #   subsequent 'shell: bash' steps will use msys2 instead of gitbash
-        run: echo "C:/msys64/usr/bin" >> $GITHUB_PATH
-      - name: Run repo-specific setup
-        uses: ./.github/actions/go-test-setup
-        if: hashFiles('./.github/actions/go-test-setup') != ''
-      - name: Run tests
-        if: contains(fromJSON(steps.config.outputs.json).skipOSes, matrix.os) == false
-        uses: protocol/multiple-go-modules@v1.2
+
+      - name: Install Rust ${{ steps.parse-msrv.outputs.version }} for MSRV check
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.parse-msrv.outputs.version }}
+
+      - uses: r7kamura/rust-problem-matchers@d58b70c4a13c4866d96436315da451d8106f8f08 #v1.3.0
+
+      # consider using https://github.com/mozilla/sccache/blob/main/docs/S3.md
+      # and https://github.com/mozilla/sccache/blob/main/docs/GHA.md
+      - uses: Swatinem/rust-cache@6fd3edff6979b79f87531400ad694fb7f2c84b1f # v2.2.1
+        with:
+          shared-key: msrv-cache
+          save-if: false
+
+      - name: Check if ${{ matrix.crate }} compiles on MSRV (Rust ${{ steps.parse-msrv.outputs.version }})
         env:
-          GOFLAGS: ${{ format('{0} {1}', env.GOTESTFLAGS, env.GOFLAGS) }}
+          CRATE: ${{ matrix.crate }}
+          VERSION: ${{ steps.parse-msrv.outputs.version }}
+        run: cargo +"$VERSION" build --package "$CRATE" --all-features
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # consider using https://github.com/mozilla/sccache/blob/main/docs/S3.md
+      # and https://github.com/mozilla/sccache/blob/main/docs/GHA.md
+      - uses: Swatinem/rust-cache@6fd3edff6979b79f87531400ad694fb7f2c84b1f # v2.2.1
         with:
-          run: go test -v ./...
-      - name: Run tests (32 bit)
-        # can't run 32 bit tests on OSX.
-        if: matrix.os != 'macos' &&
-          fromJSON(steps.config.outputs.json).skip32bit != true &&
-          contains(fromJSON(steps.config.outputs.json).skipOSes, matrix.os) == false
-        uses: protocol/multiple-go-modules@v1.2
+          shared-key: stable-cache
+          save-if: false
+
+      - name: Run all tests
         env:
-          GOARCH: 386
-          GOFLAGS: ${{ format('{0} {1}', env.GO386FLAGS, env.GOFLAGS) }}
-        with:
-          run: |
-            export "PATH=$PATH_386:$PATH"
-            go test -v ./...
-      - name: Run tests with race detector
-        # speed things up. Windows and OSX VMs are slow
-        if: matrix.os == 'ubuntu' &&
-          contains(fromJSON(steps.config.outputs.json).skipOSes, matrix.os) == false
-        uses: protocol/multiple-go-modules@v1.2
+          CRATE: ${{ matrix.crate }}
+        run: cargo test --package "$CRATE" --all-features
+
+      - name: Check if we compile without any features activated
         env:
-          GOFLAGS: ${{ format('{0} {1}', env.GORACEFLAGS, env.GOFLAGS) }}
+          CRATE: ${{ matrix.crate }}
+        run: cargo build --package "$CRATE" --no-default-features
+
+      - run: cargo clean
+
+      - name: Check if crate has been released
+        id: check-released
+        env:
+          CRATE: ${{ matrix.crate }}
+        run: |
+          RESPONSE_CODE=$(curl "https://crates.io/api/v1/crates/$CRATE" --silent --write-out "%{http_code}" --output /dev/null)
+          echo "code=${RESPONSE_CODE}"
+          echo "code=${RESPONSE_CODE}" >> $GITHUB_OUTPUT
+
+      - uses: ./.github/actions/cargo-semver-checks
+        if: steps.check-released.outputs.code == 200 # Workaround until https://github.com/obi1kenobi/cargo-semver-check/issues/146 is shipped.
         with:
-          run: go test -v -race ./...
-      - name: Collect coverage files
-        id: coverages
-        shell: bash
-        run: echo "files=$(find . -type f -name 'module-coverage.txt' | tr -s '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # v3.1.1
-        with:
-          files: ${{ steps.coverages.outputs.files }}
-          env_vars: OS=${{ matrix.os }}, GO=${{ matrix.go }}
+          crate: ${{ matrix.crate }}
+
+      - name: Enforce no dependency on meta crate
+        env:
+          CRATE: ${{ matrix.crate }}
+        run: |
+          cargo metadata --format-version=1 --no-deps | \
+          jq -e -r '.packages[] | select(.name == env.CRATE) | .dependencies | all(.name != "libp2p")'
