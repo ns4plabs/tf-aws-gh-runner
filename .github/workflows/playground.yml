@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: Test ${{ matrix.crate }}
-    runs-on: ["self-hosted", "linux", "x64", "playground"]
+    runs-on: ["self-hosted", "linux", "x64", "2xlarge"]
     strategy:
       fail-fast: false
       matrix:
