@@ -25,7 +25,7 @@ locals {
         },
         {
           name = "ATHENS_DOWNLOAD_MODE"
-          value = "async"
+          value = "sync"
         },
         {
           name = "ATHENS_GO_BINARY_ENV_VARS"
@@ -368,7 +368,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "docker" {
   rule {
     id      = "default"
     expiration {
-      days = 30
+      days = 90
     }
     status = "Enabled"
   }
