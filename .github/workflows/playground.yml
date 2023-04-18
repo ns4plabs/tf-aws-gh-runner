@@ -5,92 +5,10 @@ on:
   push:
     paths:
       - .github/workflows/playground.yml
-      
+
 jobs:
-  test:
-    name: Test ${{ matrix.crate }}
-    runs-on: ["self-hosted", "linux", "x64", "playground"]
-    strategy:
-      fail-fast: false
-      matrix:
-        crate: ["libp2p-quic", "libp2p-perf"]
+  playground:
+    name: Play
+    runs-on: ["self-hosted", "linux", "x64", "2xlarge"]
     steps:
-      - name: Install Protoc
-        run: sudo apt-get install -y protobuf-compiler
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - uses: actions/checkout@v3
-        with:
-          repository: libp2p/rust-libp2p
-
-      - name: Get MSRV for ${{ matrix.crate }}
-        id: parse-msrv
-        env:
-          CRATE: ${{ matrix.crate }}
-        run: |
-          RUST_VERSION=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[] | select(.name == env.CRATE) | .rust_version')
-          echo "version=${RUST_VERSION}" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Install Rust ${{ steps.parse-msrv.outputs.version }} for MSRV check
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ steps.parse-msrv.outputs.version }}
-
-      - uses: r7kamura/rust-problem-matchers@d58b70c4a13c4866d96436315da451d8106f8f08 #v1.3.0
-
-      # consider using https://github.com/mozilla/sccache/blob/main/docs/S3.md
-      # and https://github.com/mozilla/sccache/blob/main/docs/GHA.md
-      - uses: Swatinem/rust-cache@6fd3edff6979b79f87531400ad694fb7f2c84b1f # v2.2.1
-        with:
-          shared-key: msrv-cache
-          save-if: false
-
-      - name: Check if ${{ matrix.crate }} compiles on MSRV (Rust ${{ steps.parse-msrv.outputs.version }})
-        env:
-          CRATE: ${{ matrix.crate }}
-          VERSION: ${{ steps.parse-msrv.outputs.version }}
-        run: cargo +"$VERSION" build --package "$CRATE" --all-features
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      # consider using https://github.com/mozilla/sccache/blob/main/docs/S3.md
-      # and https://github.com/mozilla/sccache/blob/main/docs/GHA.md
-      - uses: Swatinem/rust-cache@6fd3edff6979b79f87531400ad694fb7f2c84b1f # v2.2.1
-        with:
-          shared-key: stable-cache
-          save-if: false
-
-      - name: Run all tests
-        env:
-          CRATE: ${{ matrix.crate }}
-        run: cargo test --package "$CRATE" --all-features
-
-      - name: Check if we compile without any features activated
-        env:
-          CRATE: ${{ matrix.crate }}
-        run: cargo build --package "$CRATE" --no-default-features
-
-      - run: cargo clean
-
-      - name: Check if crate has been released
-        id: check-released
-        env:
-          CRATE: ${{ matrix.crate }}
-        run: |
-          RESPONSE_CODE=$(curl "https://crates.io/api/v1/crates/$CRATE" --silent --write-out "%{http_code}" --output /dev/null)
-          echo "code=${RESPONSE_CODE}"
-          echo "code=${RESPONSE_CODE}" >> $GITHUB_OUTPUT
-
-      - uses: ./.github/actions/cargo-semver-checks
-        if: steps.check-released.outputs.code == 200 # Workaround until https://github.com/obi1kenobi/cargo-semver-check/issues/146 is shipped.
-        with:
-          crate: ${{ matrix.crate }}
-
-      - name: Enforce no dependency on meta crate
-        env:
-          CRATE: ${{ matrix.crate }}
-        run: |
-          cargo metadata --format-version=1 --no-deps | \
-          jq -e -r '.packages[] | select(.name == env.CRATE) | .dependencies | all(.name != "libp2p")'
+      - run: docker pull ubuntu:latest
