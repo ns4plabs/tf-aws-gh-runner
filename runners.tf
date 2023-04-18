@@ -134,7 +134,7 @@ module "runners" {
       runner_extra_labels = "playground"
       runner_os = "linux"
       runner_architecture = "x64"
-      instance_types = ["c5.2xlarge"]
+      instance_types = ["c5.xlarge"]
       repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
@@ -147,10 +147,10 @@ module "runners" {
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
-        volume_type           = "gp3"
+        volume_type           = "io2"
         volume_size           = 100
         encrypted             = true
-        iops                  = null
+        iops                  = 1500
         throughput            = null
         kms_key_id            = null
         snapshot_id           = null
