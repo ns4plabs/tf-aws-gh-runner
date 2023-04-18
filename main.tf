@@ -66,20 +66,4 @@ resource "aws_s3_bucket_lifecycle_configuration" "tf-aws-gh-runner" {
       status = "Enabled"
     }
   }
-
-  # docker.tf
-  dynamic "rule" {
-    for_each =  {for k, v in local.registries : k => v if !contains(keys(v), "s3_bucket")}
-
-    content {
-      id = rule.key
-      filter {
-        prefix = "docker/${rule.key}/"
-      }
-      expiration {
-        days = 30
-      }
-      status = "Enabled"
-    }
-  }
 }

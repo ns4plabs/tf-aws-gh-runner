@@ -38,6 +38,7 @@ locals {
       # TODO: change to public ECR image; it'll require access to ECR on the exec role
       # WARN: Why edge instead of registry:2.8.1? https://github.com/distribution/distribution/issues/3645#issuecomment-1347430516
       image     = "distribution/distribution@sha256:43300dba89e7432db97365a4cb2918017ae8c08afb3d72fff0cb92db674bbc17"
+      s3_bucket = "tf-aws-gh-runner-docker-proxy"
       cpu = 1
       memory = 2
       environment = [
@@ -46,9 +47,8 @@ locals {
           value = <<-EOT
             s3:
               region: us-east-1
-              # TODO: consider using dedicated bucket
-              bucket: tf-aws-gh-runner
-              rootdirectory: /docker/proxy/v0
+              bucket: tf-aws-gh-runner-docker-proxy
+              rootdirectory: /v0
             delete:
               enabled: false
             redirect:
@@ -198,7 +198,7 @@ resource "aws_lb_target_group" "docker" {
 resource "aws_ecs_task_definition" "docker" {
   for_each = local.registries
 
-  depends_on = [aws_iam_role_policy.docker_s3, aws_iam_role_policy.docker_private_s3]
+  depends_on = [aws_iam_role_policy.docker_private_s3]
 
   family                   = "docker-${each.key}"
   network_mode             = "awsvpc"
@@ -342,7 +342,7 @@ resource "aws_iam_role_policy" "docker_logging" {
 # S3
 
 resource "aws_s3_bucket" "docker" {
-  for_each = {for k, v in local.registries : k => v if contains(keys(v), "s3_bucket")}
+  for_each = local.registries
 
   bucket = each.value.s3_bucket
 
@@ -353,7 +353,7 @@ resource "aws_s3_bucket" "docker" {
 }
 
 resource "aws_s3_bucket_acl" "docker" {
-  for_each = {for k, v in local.registries : k => v if contains(keys(v), "s3_bucket")}
+  for_each = local.registries
 
   bucket = aws_s3_bucket.docker[each.key].id
   acl    = "private"
@@ -361,7 +361,7 @@ resource "aws_s3_bucket_acl" "docker" {
 
 
 resource "aws_s3_bucket_lifecycle_configuration" "docker" {
-  for_each = {for k, v in local.registries : k => v if contains(keys(v), "s3_bucket")}
+  for_each = local.registries
 
   bucket = aws_s3_bucket.docker[each.key].id
 
@@ -375,7 +375,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "docker" {
 }
 
 resource "aws_iam_role_policy" "docker_private_s3" {
-  for_each = {for k, v in local.registries : k => v if contains(keys(v), "s3_bucket")}
+  for_each = local.registries
 
   name = "s3-policy-tf-aws-gh-runner-docker-proxy"
   role = aws_iam_role.docker[each.key].name
@@ -406,50 +406,6 @@ resource "aws_iam_role_policy" "docker_private_s3" {
         ]
         Effect   = "Allow"
         Resource = ["${aws_s3_bucket.docker[each.key].arn}"]
-      },
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "docker_s3" {
-  for_each = {for k, v in local.registries : k => v if !contains(keys(v), "s3_bucket")}
-
-  name = "s3-policy-tf-aws-gh-runner-docker-${each.key}"
-  role = aws_iam_role.docker[each.key].name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid = "AllowLimitedGetPut"
-        Action = [
-          "s3:GetObject",
-          "s3:GetObjectAcl",
-          "s3:PutObject",
-          "s3:PutObjectAcl",
-          "s3:DeleteObject",
-          "s3:ListMultipartUploadParts",
-          "s3:AbortMultipartUpload"
-        ]
-        Effect   = "Allow"
-        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}/docker/${each.key}*"]
-      },
-      {
-        Sid = "AllowLimitedList"
-        Action = [
-          "s3:ListBucket",
-          "s3:GetBucketLocation",
-          "s3:ListBucketMultipartUploads"
-        ]
-        Effect   = "Allow"
-        Resource = ["${data.aws_s3_bucket.tf-aws-gh-runner.arn}"]
-        Condition = {
-          StringLike: {
-            "s3:prefix" = [
-              "docker/${each.key}*",
-            ]
-          }
-        }
       },
     ]
   })
