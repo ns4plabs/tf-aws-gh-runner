@@ -10,7 +10,7 @@ terraform {
     }
   }
 
-  required_version = "~> 1.1.4"
+  required_version = "~> 1.3.7"
 }
 
 provider "aws" {
@@ -91,19 +91,19 @@ resource "aws_iam_user_policy" "this" {
 
 module "github-runner_download-lambda" {
   source  = "philips-labs/github-runner/aws//modules/download-lambda"
-  version = "1.9.1"
+  version = "3.1.0"
   lambdas = [
     {
       name = "webhook"
-      tag  = "v1.9.1"
+      tag  = "v3.1.0"
     },
     {
       name = "runners"
-      tag  = "v1.9.1"
+      tag  = "v3.1.0"
     },
     {
       name = "runner-binaries-syncer"
-      tag  = "v1.9.1"
+      tag  = "v3.1.0"
     }
   ]
 }
