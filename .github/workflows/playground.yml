@@ -11,4 +11,5 @@ jobs:
     name: Play
     runs-on: ["self-hosted", "linux", "x64", "playground"]
     steps:
-      - run: docker pull ubuntu:latest
+      - run: sleep 120
+        shell: bash

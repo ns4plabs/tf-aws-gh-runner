@@ -201,7 +201,7 @@ module "runners" {
 
   enable_runner_detailed_monitoring = lookup(each.value, "enable_runner_detailed_monitoring", false)
 
-  enable_organization_runners = true
+  enable_organization_runners = false
   runner_extra_labels         = each.value.runner_extra_labels
   enable_runner_workflow_job_labels_check_all = true
 
