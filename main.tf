@@ -48,12 +48,32 @@ data "aws_caller_identity" "current" {}
 
 # RETENTION
 
+resource "aws_s3_bucket_lifecycle_configuration" "tf-aws-gh-runner_v2" {
+  bucket = data.aws_s3_bucket.tf-aws-gh-runner.id
+
+  # artifacts.tf
+  dynamic "rule" {
+    for_each = local.runners
+
+    content {
+      id = rule.key
+      filter {
+        prefix = "${rule.key}/"
+      }
+      expiration {
+        days = 90
+      }
+      status = "Enabled"
+    }
+  }
+}
+
 resource "aws_s3_bucket_lifecycle_configuration" "tf-aws-gh-runner" {
   bucket = data.aws_s3_bucket.tf-aws-gh-runner.id
 
   # artifacts.tf
   dynamic "rule" {
-    for_each = module.runners
+    for_each = local.legacy_runners
 
     content {
       id = rule.key

@@ -101,13 +101,6 @@ done
 echo "Delete GH Runner token from AWS SSM"
 aws ssm delete-parameter --name "$token_path"/"$instance_id" --region "$region"
 
-echo "Retreving GH Runner owner from config"
-runner_owner=$(echo "$config" | grep -oP -- '--url\s+https?://[^/]+/\K[^ ]*')
-echo "Retrieved GH Runner owner ($runner_owner) from config"
-
-# echo "Tag GH Runner instance with owner"
-# aws ec2 create-tags --resources "$instance_id" --tags Key=ghr:runner_owner,Value="$runner_owner" --region "$region"
-
 if [ -z "$run_as" ]; then
   echo "No user specified, using default ec2-user account"
   run_as="ec2-user"
