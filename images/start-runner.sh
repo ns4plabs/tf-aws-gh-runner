@@ -1,7 +1,7 @@
 #!/bin/bash -e
 exec > >(tee /var/log/runner-startup.log | logger -t user-data -s 2>/dev/console) 2>&1
 
-cd /opt/actions-runner
+cd /home/runner
 
 # shellcheck shell=bash
 
@@ -119,7 +119,7 @@ sudo --preserve-env=RUNNER_ALLOW_RUNASROOT -u "$run_as" -- ./config.sh --unatten
 info_arch=$(uname -p)
 info_os=$(( lsb_release -ds || cat /etc/*release || uname -om ) 2>/dev/null | head -n1 | cut -d "=" -f2- | tr -d '"')
 
-tee /opt/actions-runner/.setup_info <<EOL
+tee /home/runner/.setup_info <<EOL
 [
   {
     "group": "Operating System",

@@ -104,6 +104,17 @@ build {
       "DEBIAN_FRONTEND=noninteractive"
     ]
     inline = concat([
+      "sudo useradd -m runner",
+      "sudo usermod -a -G sudo runner",
+      "sudo echo 'runner ALL=(ALL) NOPASSWD:ALL' | sudo tee -a /etc/sudoers"
+    ])
+  }
+
+  provisioner "shell" {
+    environment_vars = [
+      "DEBIAN_FRONTEND=noninteractive"
+    ]
+    inline = concat([
       "sudo cloud-init status --wait",
       "sudo apt-get -y update",
       "sudo apt-get -y install ca-certificates curl gnupg lsb-release",
@@ -113,7 +124,7 @@ build {
       "sudo apt-get -y install docker-ce docker-ce-cli containerd.io jq git unzip",
       "sudo systemctl enable containerd.service",
       "sudo service docker start",
-      "sudo usermod -a -G docker ubuntu",
+      "sudo usermod -a -G docker runner",
       "sudo curl -f https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb -o amazon-cloudwatch-agent.deb",
       "sudo dpkg -i amazon-cloudwatch-agent.deb",
       "sudo systemctl restart amazon-cloudwatch-agent",
@@ -149,9 +160,9 @@ build {
     ]
     inline = [
       "sudo chmod +x /tmp/install-runner.sh",
-      "echo ubuntu | tee -a /tmp/install-user.txt",
+      "echo runner | tee -a /tmp/install-user.txt",
       "sudo RUNNER_ARCHITECTURE=x64 RUNNER_TARBALL_URL=$RUNNER_TARBALL_URL /tmp/install-runner.sh",
-      "echo ImageOS=ubuntu22 | tee -a /opt/actions-runner/.env"
+      "echo ImageOS=ubuntu22 | sudo tee -a /home/runner/.env"
     ]
   }
 
@@ -173,7 +184,7 @@ build {
     ]
     expect_disconnect = true
     inline = [
-      # force a reboot so the docker group is effective with the ubuntu user.
+      # force a reboot so the docker group is effective with the runner user.
       "sudo reboot"
     ]
   }

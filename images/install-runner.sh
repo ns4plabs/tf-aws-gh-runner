@@ -22,10 +22,7 @@ echo "Setting up GH Actions runner tool cache"
 # Warning, not all setup actions support the env vars and so this specific path must be created regardless
 mkdir -p /opt/hostedtoolcache
 
-echo "Creating actions-runner directory for the GH Action installation"
-cd /opt/
-mkdir -p actions-runner && cd actions-runner
-
+cd /home/"$user_name"
 
 if [[ -n "$RUNNER_TARBALL_URL" ]]; then
   echo "Downloading the GH Action runner from $RUNNER_TARBALL_URL to $file_name"
