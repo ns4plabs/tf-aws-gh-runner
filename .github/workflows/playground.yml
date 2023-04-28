@@ -11,5 +11,5 @@ jobs:
     name: Play
     runs-on: ["self-hosted", "linux", "x64", "playground"]
     steps:
-      - run: pwd
+      - run: cat /etc/apt/apt.conf.d/10periodic
         shell: bash
