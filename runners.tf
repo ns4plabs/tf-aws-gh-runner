@@ -8,12 +8,12 @@ locals {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo", "ipfs/kubo"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202212300856-kubo"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304271654-default"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
       enable_runner_detailed_monitoring = true
-      runner_run_as = "ubuntu"
+      runner_run_as = "runner"
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
@@ -34,12 +34,12 @@ locals {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "ipfs/kubo", "ipfs/boxo", "libp2p/test-plans", "libp2p/rust-libp2p"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304130748-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304271654-default"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
       enable_runner_detailed_monitoring = true
-      runner_run_as = "ubuntu"
+      runner_run_as = "runner"
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
@@ -60,12 +60,12 @@ locals {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "ipfs/kubo", "ipfs/boxo", "libp2p/go-libp2p", "quic-go/quic-go", "libp2p/rust-libp2p"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304130748-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304271654-default"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
       enable_runner_detailed_monitoring = true
-      runner_run_as = "ubuntu"
+      runner_run_as = "runner"
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
@@ -86,12 +86,12 @@ locals {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/rust-libp2p", "quic-go/quic-go"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304130748-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304271654-default"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
       enable_runner_detailed_monitoring = true
-      runner_run_as = "ubuntu"
+      runner_run_as = "runner"
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
@@ -112,12 +112,12 @@ locals {
       repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/rust-libp2p"]
       runners_maximum_count = 50
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304130748-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304271654-default"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
       enable_runner_detailed_monitoring = true
-      runner_run_as = "ubuntu"
+      runner_run_as = "runner"
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
