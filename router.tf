@@ -131,7 +131,7 @@ resource "aws_lb_listener_rule" "webhook_router" {
   condition {
     http_header {
       http_header_name = "x-github-workflow_job-labels"
-      values           = [module.runners[each.value].webhook.lambda.environment[0].variables.RUNNER_LABELS]
+      values           = [jsonencode(jsondecode(module.runners[each.value].webhook.lambda.environment[0].variables.RUNNER_CONFIG)[0].matcherConfig.labelMatchers[0])]
     }
   }
 

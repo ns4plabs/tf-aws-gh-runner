@@ -22,10 +22,7 @@ echo "Setting up GH Actions runner tool cache"
 # Warning, not all setup actions support the env vars and so this specific path must be created regardless
 mkdir -p /opt/hostedtoolcache
 
-echo "Creating actions-runner directory for the GH Action installation"
-cd /opt/
-mkdir -p actions-runner && cd actions-runner
-
+cd /home/"$user_name"
 
 if [[ -n "$RUNNER_TARBALL_URL" ]]; then
   echo "Downloading the GH Action runner from $RUNNER_TARBALL_URL to $file_name"
@@ -46,11 +43,15 @@ tar xzf ./$file_name
 echo "Delete tar file"
 rm -rf $file_name
 
-if [[ "$architecture" == "arm64" ]]; then
+os_id=$(awk -F= '/^ID/{print $2}' /etc/os-release)
+echo OS: $os_id
+
+# Install libicu60 for arm64 on non-ubuntu
+if [[ "$architecture" == "arm64" ]] && [[ ! "$os_id" =~ ^ubuntu.* ]]; then
   yum install -y libicu60
 fi
 
-os_id=$(awk -F= '/^ID/{print $2}' /etc/os-release)
+# Install dependencies for ubuntu
 if [[ "$os_id" =~ ^ubuntu.* ]]; then
     echo "Installing dependencies"
     ./bin/installdependencies.sh
