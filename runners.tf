@@ -134,11 +134,11 @@ locals {
       runner_extra_labels = "playground"
       runner_os = "linux"
       runner_architecture = "x64"
-      instance_types = ["c5.xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/rust-libp2p"]
+      instance_types = ["c5.4xlarge"]
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/go-libp2p", "ipfs/kubo", "ipfs/boxo"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304271615-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304271654-default"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
