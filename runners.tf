@@ -105,8 +105,8 @@ locals {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.4xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/go-libp2p", "ipfs/kubo", "ipfs/boxo"]
-      runners_maximum_count = 20
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
+      runners_maximum_count = 1
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304281501-default"] }
       ami_owners = ["642361402189"]
@@ -282,7 +282,6 @@ module "runners" {
   log_level = "debug"
 
   repository_white_list = try(each.value.repository_white_list, [
-    "galorgh/kubo",
     "ipfs/boxo",
     "ipfs/kubo",
     "ipni/storetheindex",
