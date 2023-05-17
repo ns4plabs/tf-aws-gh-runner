@@ -1,37 +1,10 @@
 locals {
   runner_configs = {
-    "kubo" = {
-      runner_extra_labels = "kubo"
-      runner_os = "linux"
-      runner_architecture = "x64"
-      instance_types = ["c5.4xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "galorgh/kubo", "ipfs/kubo"]
-      runners_maximum_count = 20
-      instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304281501-default"] }
-      ami_owners = ["642361402189"]
-      enable_userdata = false
-      enable_runner_binaries_syncer = false
-      enable_runner_detailed_monitoring = true
-      runner_run_as = "runner"
-      block_device_mappings = [{
-        device_name           = "/dev/sda1"
-        delete_on_termination = true
-        volume_type           = "io2"
-        volume_size           = 100
-        encrypted             = true
-        iops                  = 2500
-        throughput            = null
-        kms_key_id            = null
-        snapshot_id           = null
-      }]
-    }
     "linux-x64-4xlarge" = {
       runner_extra_labels = "4xlarge"
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.4xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "ipfs/kubo", "ipfs/boxo", "libp2p/test-plans", "libp2p/rust-libp2p"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304281501-default"] }
@@ -57,7 +30,6 @@ locals {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.2xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "ipfs/kubo", "ipfs/boxo", "libp2p/go-libp2p", "quic-go/quic-go", "libp2p/rust-libp2p"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304281501-default"] }
@@ -83,7 +55,6 @@ locals {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.xlarge", "m5.xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/rust-libp2p", "quic-go/quic-go"]
       runners_maximum_count = 20
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304281501-default"] }
@@ -109,7 +80,6 @@ locals {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.large", "m5.large"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner", "libp2p/rust-libp2p"]
       runners_maximum_count = 50
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304281501-default"] }
@@ -311,7 +281,17 @@ module "runners" {
 
   log_level = "debug"
 
-  repository_white_list = each.value.repository_white_list
+  repository_white_list = try(each.value.repository_white_list, [
+    "galorgh/kubo",
+    "ipfs/boxo",
+    "ipfs/kubo",
+    "ipni/storetheindex",
+    "libp2p/go-libp2p",
+    "libp2p/rust-libp2p",
+    "libp2p/test-plans",
+    "pl-strflt/tf-aws-gh-runner",
+    "quic-go/quic-go"
+  ])
 
   logging_retention_in_days = 30
 
