@@ -26,6 +26,7 @@ echo "Retrieved ghr:environment tag - ($environment)"
 echo "Retrieved ghr:ssm_config_path tag - ($ssm_config_path)"
 echo "Retrieved ghr:runner_name_prefix tag - ($runner_name_prefix)"
 
+# fails on public subnet
 parameters=$(aws ssm get-parameters-by-path --path "$ssm_config_path" --region "$region" --query "Parameters[*].{Name:Name,Value:Value}")
 echo "Retrieved parameters from AWS SSM ($parameters)"
 

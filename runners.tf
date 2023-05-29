@@ -51,6 +51,7 @@ locals {
       }]
     }
     "linux-x64-xlarge" = {
+      subnet_ids = module.vpc.public_subnets
       runner_extra_labels = "xlarge"
       runner_os = "linux"
       runner_architecture = "x64"
@@ -76,6 +77,7 @@ locals {
       }]
     }
     "linux-x64-large" = {
+      subnet_ids = module.vpc.public_subnets
       runner_extra_labels = "large"
       runner_os = "linux"
       runner_architecture = "x64"
@@ -101,11 +103,11 @@ locals {
       }]
     }
     "playground" = {
+      subnet_ids = module.vpc.public_subnets
       runner_extra_labels = "playground"
       runner_os = "linux"
       runner_architecture = "x64"
-      instance_types = ["c5.4xlarge"]
-      repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
+      instance_types = ["c5.xlarge", "m5.xlarge"]
       runners_maximum_count = 1
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202304281501-default"] }
@@ -117,10 +119,10 @@ locals {
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
-        volume_type           = "io2"
+        volume_type           = "gp3"
         volume_size           = 100
         encrypted             = true
-        iops                  = 1500
+        iops                  = null
         throughput            = null
         kms_key_id            = null
         snapshot_id           = null
@@ -226,7 +228,8 @@ module "runners" {
   version                         = "3.1.0"
   aws_region                      = data.aws_region.default.name
   vpc_id                          = module.vpc.vpc_id
-  subnet_ids                      = module.vpc.private_subnets
+  # https://github.com/philips-labs/terraform-aws-github-runner/issues/3163
+  subnet_ids                      = try(each.value.subnet_ids, module.vpc.private_subnets)
 
   prefix = each.key
   tags = local.tags
