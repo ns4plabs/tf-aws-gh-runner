@@ -228,7 +228,6 @@ module "runners" {
   version                         = "3.1.0"
   aws_region                      = data.aws_region.default.name
   vpc_id                          = module.vpc.vpc_id
-  # https://github.com/philips-labs/terraform-aws-github-runner/issues/3163
   subnet_ids                      = try(each.value.subnet_ids, module.vpc.private_subnets)
 
   prefix = each.key
