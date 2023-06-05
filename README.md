@@ -2,7 +2,7 @@
 
 ![runner-banner](https://github.com/pl-strflt/tf-aws-gh-runner/assets/6688074/ef8ede5b-a2fe-45c1-8564-66eeb8ba0fdb)
 
-# Customizable Self-hosted GitHub Runners by pl-strflt
+# Customizable Self-hosted GitHub Runners
 
 Leveraging the power of [terraform-aws-github-runner](https://github.com/philips-labs/terraform-aws-github-runner), this project introduces an innovative way to manage self-hosted GitHub runners. It features a dynamic routing layer, enabling configuration for up to 100 different types of runners within a single GitHub App.
 
