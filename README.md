@@ -1,3 +1,6 @@
+![runner-banner](https://github.com/pl-strflt/tf-aws-gh-runner/assets/6688074/ef8ede5b-a2fe-45c1-8564-66eeb8ba0fdb)
+
+
 # Self-hosted GitHub Runners by pl-strflt
 
 This project uses [terraform-aws-github-runner](https://github.com/philips-labs/terraform-aws-github-runner) to provide self-hosted GitHub runners. It expands on this project by addig a routing layer which allows configuration of up to a 100 different types of runners under a single GitHub App.
