@@ -11,5 +11,5 @@ jobs:
     name: Play
     runs-on: ["self-hosted", "linux", "x64", "playground"]
     steps:
-      - run: curl http://internal-tf-aws-gh-runner-docker-proxy-669910242.us-east-1.elb.amazonaws.com
+      - run: gh --help
         shell: bash
