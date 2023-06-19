@@ -46,7 +46,7 @@ variable "post_install_custom_shell_commands" {
 variable "runner_version" {
   description = "The version (no v prefix) of the runner software to install https://github.com/actions/runner/releases"
   type        = string
-  default     = "2.303.0"
+  default     = "2.305.0"
 }
 
 source "amazon-ebs" "githubrunner" {
