@@ -5,7 +5,7 @@ locals {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.4xlarge"]
-      runners_maximum_count = 20
+      runners_maximum_count = 50
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202306190748-default"] }
       ami_owners = ["642361402189"]
@@ -30,7 +30,7 @@ locals {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.2xlarge"]
-      runners_maximum_count = 20
+      runners_maximum_count = 50
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202306190748-default"] }
       ami_owners = ["642361402189"]
@@ -55,7 +55,7 @@ locals {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.xlarge", "m5.xlarge"]
-      runners_maximum_count = 20
+      runners_maximum_count = 50
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202306190748-default"] }
       ami_owners = ["642361402189"]
@@ -80,7 +80,7 @@ locals {
       runner_os = "linux"
       runner_architecture = "x64"
       instance_types = ["c5.large", "m5.large"]
-      runners_maximum_count = 50
+      runners_maximum_count = 100
       instance_target_capacity_type = "on-demand"
       ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202306190748-default"] }
       ami_owners = ["642361402189"]
