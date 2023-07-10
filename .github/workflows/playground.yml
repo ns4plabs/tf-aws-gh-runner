@@ -13,5 +13,5 @@ jobs:
     steps:
       - env:
           HELLO: World!
-        run: echo "Hello "$HELLO"
+        run: echo "Hello" "$HELLO"
         shell: bash
