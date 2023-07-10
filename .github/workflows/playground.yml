@@ -15,3 +15,5 @@ jobs:
           HELLO: World!
         run: echo "Hello" "$HELLO"
         shell: bash
+      - run: sleep 60
+        shell: bash
