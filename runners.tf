@@ -295,4 +295,37 @@ module "runners" {
   logging_retention_in_days = 30
 
   runner_boot_time_in_minutes = each.value.runner_os == "windows" ? 20 : 5
+
+  runner_log_files = [
+    {
+      "log_group_name" : "syslog",
+      "prefix_log_group" : true,
+      "file_path" : "/var/log/syslog",
+      "log_stream_name" : "{instance_id}"
+    },
+    {
+      "log_group_name" : "user_data",
+      "prefix_log_group" : true,
+      "file_path" : "/var/log/user-data.log",
+      "log_stream_name" : "{instance_id}"
+    },
+    {
+      "log_group_name" : "runner",
+      "prefix_log_group" : true,
+      "file_path" : "/home/runner/_diag/Runner_**.log",
+      "log_stream_name" : "{instance_id}"
+    },
+    {
+      "log_group_name" : "runner-startup",
+      "prefix_log_group" : true,
+      "file_path" : "/var/log/runner-startup.log",
+      "log_stream_name" : "{instance_id}"
+    },
+    {
+      "log_group_name" : "worker",
+      "prefix_log_group" : true,
+      "file_path" : "/home/runner/_diag/Worker_**.log",
+      "log_stream_name" : "{instance_id}"
+    }
+  ]
 }
