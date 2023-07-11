@@ -328,4 +328,6 @@ module "runners" {
       "log_stream_name" : "{instance_id}"
     }
   ]
+
+  scale_up_reserved_concurrent_executions = -1
 }
