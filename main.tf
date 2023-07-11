@@ -107,6 +107,23 @@ resource "aws_cloudwatch_log_metric_filter" "github-timeout" {
   }
 }
 
+resource "aws_cloudwatch_log_metric_filter" "github-timeout-2" {
+  for_each = local.legacy_runners
+  depends_on = [ module.runners ]
+
+  name           = "github-timeout-${each.key}"
+  pattern        = "\"The request was canceled due to the configured HttpClient.Timeout of 100 seconds elapsing.\""
+  log_group_name = "/github-self-hosted-runners/${each.key}/runner"
+
+  metric_transformation {
+    name          = "Timeout2"
+    namespace     = "GitHub"
+    value         = "1"
+    default_value = null
+    unit          = "Count"
+  }
+}
+
 resource "aws_sns_topic" "github-timeout" {
   name = "github-timeout"
 }
@@ -133,6 +150,34 @@ resource "aws_cloudwatch_metric_alarm" "github-timeout" {
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "1"
   threshold           = "0"
+  unit                = "Count"
+
+  datapoints_to_alarm                   = "1"
+  treat_missing_data                    = "notBreaching"
+
+  # conflicts with metric_query
+  metric_name        = each.value.metric_transformation[0].name
+  namespace          = each.value.metric_transformation[0].namespace
+  period             = "3600"
+  statistic          = "Sum"
+
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "github-timeout-2" {
+  for_each = aws_cloudwatch_log_metric_filter.github-timeout-2
+
+  alarm_name        = "github-timeout-2-${each.key}"
+  alarm_description = "GitHub Runner Timeout 2"
+  actions_enabled   = true
+
+  alarm_actions             = [aws_sns_topic.github-timeout.arn]
+  ok_actions                = []
+  insufficient_data_actions = []
+
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  threshold           = "1"
   unit                = "Count"
 
   datapoints_to_alarm                   = "1"
