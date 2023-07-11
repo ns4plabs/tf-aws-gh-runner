@@ -143,7 +143,14 @@ if [[ $agent_mode = "ephemeral" ]]; then
 cat >/opt/start-runner-service.sh <<-EOF
   echo "Starting the runner in ephemeral mode"
   sudo --preserve-env=GOPROXY --preserve-env=RUNNER_ALLOW_RUNASROOT -u "$run_as" -- ./run.sh
-  echo "Runner has finished"
+  echo "Runner has finished with $? exit code"
+
+  # Ideas for further improvements:
+  # - Check if /var/runner-startup.log contains Listening for Jobs
+  # - Check exit code of ./run.sh
+
+  echo "Wait for 30 seconds to ensure all logs are flushed"
+  sleep 30
 
   echo "Stopping cloudwatch service"
   systemctl stop amazon-cloudwatch-agent.service
