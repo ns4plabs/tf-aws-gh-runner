@@ -158,7 +158,7 @@ resource "aws_cloudwatch_metric_alarm" "github-timeout" {
   # conflicts with metric_query
   metric_name        = each.value.metric_transformation[0].name
   namespace          = each.value.metric_transformation[0].namespace
-  period             = "3600"
+  period             = "600"
   statistic          = "Sum"
 
   tags = local.tags
@@ -186,7 +186,7 @@ resource "aws_cloudwatch_metric_alarm" "github-timeout-2" {
   # conflicts with metric_query
   metric_name        = each.value.metric_transformation[0].name
   namespace          = each.value.metric_transformation[0].namespace
-  period             = "3600"
+  period             = "600"
   statistic          = "Sum"
 
   tags = local.tags
