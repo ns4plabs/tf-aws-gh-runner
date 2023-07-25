@@ -286,6 +286,7 @@ module "runners" {
     "ipfs/kubo",
     "ipni/storetheindex",
     "libp2p/go-libp2p",
+    "libp2p/js-libp2p",
     "libp2p/rust-libp2p",
     "libp2p/test-plans",
     "pl-strflt/tf-aws-gh-runner",
