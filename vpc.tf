@@ -6,7 +6,7 @@
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "3.11.2"
+  version = "5.1.0"
 
   name = "vpc-tf-aws-gh-runner"
   cidr = "10.0.0.0/16"
@@ -16,6 +16,7 @@ module "vpc" {
   azs             = ["${data.aws_region.default.name}a", "${data.aws_region.default.name}b", "${data.aws_region.default.name}c"]
   private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  database_subnets = ["10.0.201.0/24", "10.0.202.0/24", "10.0.203.0/24"]
 
   enable_dns_hostnames    = true
   enable_nat_gateway      = true
@@ -23,7 +24,18 @@ module "vpc" {
   single_nat_gateway      = true
 
   enable_ipv6                     = true
-  assign_ipv6_address_on_creation = true
+
+  public_subnet_assign_ipv6_address_on_creation = true
+  private_subnet_assign_ipv6_address_on_creation = true
+  database_subnet_assign_ipv6_address_on_creation = true
+
+  public_subnet_enable_dns64 = false
+  private_subnet_enable_dns64 = false
+  database_subnet_enable_dns64 = false
+
+  public_subnet_enable_resource_name_dns_aaaa_record_on_launch = false
+  private_subnet_enable_resource_name_dns_aaaa_record_on_launch = false
+  database_subnet_enable_resource_name_dns_aaaa_record_on_launch = false
 
   public_subnet_ipv6_prefixes   = [0, 1, 2]
   private_subnet_ipv6_prefixes  = [3, 4, 5]
