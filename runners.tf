@@ -7,7 +7,7 @@ locals {
       instance_types = ["c5.4xlarge"]
       runners_maximum_count = 50
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"], state = ["available"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
@@ -32,7 +32,7 @@ locals {
       instance_types = ["c5.2xlarge"]
       runners_maximum_count = 50
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"], state = ["available"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
@@ -57,7 +57,7 @@ locals {
       instance_types = ["c5.xlarge", "m5.xlarge"]
       runners_maximum_count = 50
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"], state = ["available"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
@@ -82,7 +82,7 @@ locals {
       instance_types = ["c5.large", "m5.large"]
       runners_maximum_count = 100
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"], state = ["available"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
@@ -108,7 +108,7 @@ locals {
       instance_types = ["c5.4xlarge"]
       runners_maximum_count = 1
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"] }
+      ami_filter = { name = ["github-runner-ubuntu-jammy-amd64-202307110949-default"], state = ["available"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
@@ -223,7 +223,7 @@ module "runners" {
   for_each = local.runner_configs
 
   source                          = "philips-labs/github-runner/aws"
-  version                         = "3.1.0"
+  version                         = "3.6.1"
   aws_region                      = data.aws_region.default.name
   vpc_id                          = module.vpc.vpc_id
   subnet_ids                      = try(each.value.subnet_ids, module.vpc.public_subnets)
