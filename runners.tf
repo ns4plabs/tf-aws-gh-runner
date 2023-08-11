@@ -283,6 +283,7 @@ module "runners" {
 
   repository_white_list = try(each.value.repository_white_list, [
     "ipfs/boxo",
+    "ipfs/distributions",
     "ipfs/kubo",
     "ipni/storetheindex",
     "libp2p/go-libp2p",
