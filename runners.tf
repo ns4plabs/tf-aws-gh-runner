@@ -282,6 +282,7 @@ module "runners" {
   log_level = "debug"
 
   repository_white_list = try(each.value.repository_white_list, [
+    "filecoin-project/builtin-actors",
     "ipfs/boxo",
     "ipfs/distributions",
     "ipfs/kubo",

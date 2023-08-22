@@ -26,6 +26,19 @@ We provide a variety of self-hosted runner configurations. Choose the one that b
 Follow these simple steps to integrate our runners into your repository:
 
 1. Insert the full repository name where you plan to utilize the self-hosted runners into the `repository_allowlist` of the desired runner type within the [runners.tf](runners.tf) file. Proceed with creating a PR and await for your changes to be merged and applied.
+    <details>
+      <summary>Environmental variables required for apply (available via IPDX 1Password Vault)</summary>
+
+      ```
+      export AWS_ACCESS_KEY_ID
+      export AWS_SECRET_ACCESS_KEY
+      export AWS_REGION
+      export TF_VAR_github_app_id
+      export TF_VAR_email # An email address to which alerts are sent
+      export TF_VAR_github_webhook_secret
+      export TF_VAR_github_app_key_base64
+      ```
+    </details>
 2. Make sure to have the [pl-strflt/tf-aws-gh-runner](https://github.com/apps/pl-strflt-tf-aws-gh-runner) GitHub App installed within your organization.
 3. Specify the self-hosted runner in your workflow by setting the `job.runs-on` parameter. For instance, `runs-on: [self-hosted, linux, x64, linux-x64-default]`, `runs-on: [self-hosted, windows, x64, windows-x64-default]`.
 
