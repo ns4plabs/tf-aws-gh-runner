@@ -9,11 +9,8 @@ on:
 jobs:
   playground:
     name: Play
-    runs-on: ["self-hosted", "linux", "x64", "playground"]
+    runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
-      - env:
-          HELLO: World!
-        run: echo "Hello" "$HELLO"
-        shell: bash
-      - run: sleep 600
+      - run: whoami
+      - run: pwd
         shell: bash
