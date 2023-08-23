@@ -1,38 +1,52 @@
-<powershell>
+$ErrorActionPreference = "Continue"
+$VerbosePreference = "Continue"
 
-Write-Output "Running User Data Script"
-Write-Host "(host) Running User Data Script"
+# Install Chocolatey
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+$env:chocolateyUseWindowsCompression = 'true'
+Invoke-WebRequest https://chocolatey.org/install.ps1 -UseBasicParsing | Invoke-Expression
 
-Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -ErrorAction Ignore
+# Add Chocolatey to powershell profile
+$ChocoProfileValue = @'
+$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+if (Test-Path($ChocolateyProfile)) {
+  Import-Module "$ChocolateyProfile"
+}
 
-# Don't set this before Set-ExecutionPolicy as it throws an error
-$ErrorActionPreference = "stop"
+refreshenv
+'@
+# Write it to the $profile location
+Set-Content -Path "$PsHome\Microsoft.PowerShell_profile.ps1" -Value $ChocoProfileValue -Force
+# Source it
+. "$PsHome\Microsoft.PowerShell_profile.ps1"
 
-# Remove HTTP listener
-Remove-Item -Path WSMan:\Localhost\listener\listener* -Recurse
+refreshenv
 
-# Create a self-signed certificate to let ssl work
-$Cert = New-SelfSignedCertificate -CertstoreLocation Cert:\LocalMachine\My -DnsName "packer"
-New-Item -Path WSMan:\LocalHost\Listener -Transport HTTPS -Address * -CertificateThumbPrint $Cert.Thumbprint -Force
+Write-Host "Installing cloudwatch agent..."
+Invoke-WebRequest -Uri https://s3.amazonaws.com/amazoncloudwatch-agent/windows/amd64/latest/amazon-cloudwatch-agent.msi -OutFile C:\amazon-cloudwatch-agent.msi
+$cloudwatchParams = '/i', 'C:\amazon-cloudwatch-agent.msi', '/qn', '/L*v', 'C:\CloudwatchInstall.log'
+Start-Process "msiexec.exe" $cloudwatchParams -Wait -NoNewWindow
+Remove-Item C:\amazon-cloudwatch-agent.msi
 
-# WinRM
-Write-Output "Setting up WinRM"
-Write-Host "(host) setting up WinRM"
+# Install dependent tools
+Write-Host "Installing additional development tools"
+choco install git awscli -y
+refreshenv
 
-# I'm not really sure why we need the cmd.exe wrapper, but it works with it and doesn't work without it
-cmd.exe /c winrm quickconfig -q
-cmd.exe /c winrm set "winrm/config" '@{MaxTimeoutms="1800000"}'
-cmd.exe /c winrm set "winrm/config/winrs" '@{MaxMemoryPerShellMB="1024"}'
-cmd.exe /c winrm set "winrm/config/service" '@{AllowUnencrypted="true"}'
-cmd.exe /c winrm set "winrm/config/client" '@{AllowUnencrypted="true"}'
-cmd.exe /c winrm set "winrm/config/service/auth" '@{Basic="true"}'
-cmd.exe /c winrm set "winrm/config/client/auth" '@{Basic="true"}'
-cmd.exe /c winrm set "winrm/config/service/auth" '@{CredSSP="true"}'
-cmd.exe /c winrm set "winrm/config/listener?Address=*+Transport=HTTPS" "@{Port=`"5986`";Hostname=`"packer`";CertificateThumbprint=`"$($Cert.Thumbprint)`"}"
-cmd.exe /c netsh advfirewall firewall set rule group="remote administration" new enable=yes
-cmd.exe /c netsh firewall add portopening TCP 5986 "Port 5986"
-cmd.exe /c net stop winrm
-cmd.exe /c sc config winrm start= auto
-cmd.exe /c net start winrm
+Write-Host "Creating actions-runner directory for the GH Action installtion"
+New-Item -ItemType Directory -Path C:\actions-runner ; Set-Location C:\actions-runner
 
-</powershell>
+Write-Host "Downloading the GH Action runner from ${action_runner_url}"
+Invoke-WebRequest -Uri ${action_runner_url} -OutFile actions-runner.zip
+
+Write-Host "Un-zip action runner"
+Expand-Archive -Path actions-runner.zip -DestinationPath .
+
+Write-Host "Delete zip file"
+Remove-Item actions-runner.zip
+
+$action = New-ScheduledTaskAction -WorkingDirectory "C:\actions-runner" -Execute "PowerShell.exe" -Argument "-File C:\start-runner.ps1"
+$trigger = New-ScheduledTaskTrigger -AtStartup
+Register-ScheduledTask -TaskName "runnerinit" -Action $action -Trigger $trigger -User System -RunLevel Highest -Force
+
+C:\ProgramData\Amazon\EC2-Windows\Launch\Scripts\InitializeInstance.ps1 -Schedule

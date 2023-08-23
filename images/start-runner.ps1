@@ -1,52 +1,196 @@
-$ErrorActionPreference = "Continue"
-$VerbosePreference = "Continue"
+Start-Transcript -Path "C:\runner-startup.log" -Append
 
-# Install Chocolatey
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-$env:chocolateyUseWindowsCompression = 'true'
-Invoke-WebRequest https://chocolatey.org/install.ps1 -UseBasicParsing | Invoke-Expression
+## Retrieve instance metadata
 
-# Add Chocolatey to powershell profile
-$ChocoProfileValue = @'
-$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-if (Test-Path($ChocolateyProfile)) {
-  Import-Module "$ChocolateyProfile"
+Write-Host  "Retrieving TOKEN from AWS API"
+$token=Invoke-RestMethod -Method PUT -Uri "http://169.254.169.254/latest/api/token" -Headers @{"X-aws-ec2-metadata-token-ttl-seconds" = "180"}
+
+$ami_id=Invoke-RestMethod -Uri "http://169.254.169.254/latest/meta-data/ami-id" -Headers @{"X-aws-ec2-metadata-token" = $token}
+
+$metadata=Invoke-RestMethod -Uri "http://169.254.169.254/latest/dynamic/instance-identity/document" -Headers @{"X-aws-ec2-metadata-token" = $token}
+
+$Region = $metadata.region
+Write-Host  "Reteieved REGION from AWS API ($Region)"
+
+$InstanceId = $metadata.instanceId
+Write-Host  "Reteieved InstanceId from AWS API ($InstanceId)"
+
+$tags=aws ec2 describe-tags --region "$Region" --filters "Name=resource-id,Values=$InstanceId" | ConvertFrom-Json
+Write-Host  "Retrieved tags from AWS API"
+
+$environment=$tags.Tags.where( {$_.Key -eq 'ghr:environment'}).value
+Write-Host  "Reteieved ghr:environment tag - ($environment)"
+
+$runner_name_prefix=$tags.Tags.where( {$_.Key -eq 'ghr:runner_name_prefix'}).value
+Write-Host  "Reteieved ghr:runner_name_prefix tag - ($runner_name_prefix)"
+
+$ssm_config_path=$tags.Tags.where( {$_.Key -eq 'ghr:ssm_config_path'}).value
+Write-Host  "Retrieved ghr:ssm_config_path tag - ($ssm_config_path)"
+
+$parameters=$(aws ssm get-parameters-by-path --path "$ssm_config_path" --region "$Region" --query "Parameters[*].{Name:Name,Value:Value}") | ConvertFrom-Json
+Write-Host  "Retrieved parameters from AWS SSM"
+
+$run_as=$parameters.where( {$_.Name -eq "$ssm_config_path/run_as"}).value
+Write-Host  "Retrieved $ssm_config_path/run_as parameter - ($run_as)"
+
+$enable_cloudwatch_agent=$parameters.where( {$_.Name -eq "$ssm_config_path/enable_cloudwatch"}).value
+Write-Host  "Retrieved $ssm_config_path/enable_cloudwatch parameter - ($enable_cloudwatch_agent)"
+
+$agent_mode=$parameters.where( {$_.Name -eq "$ssm_config_path/agent_mode"}).value
+Write-Host  "Retrieved $ssm_config_path/agent_mode parameter - ($agent_mode)"
+
+$token_path=$parameters.where( {$_.Name -eq "$ssm_config_path/token_path"}).value
+Write-Host  "Retrieved $ssm_config_path/token_path parameter - ($token_path)"
+
+
+if ($enable_cloudwatch_agent -eq "true")
+{
+    Write-Host  "Enabling CloudWatch Agent"
+    & 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1' -a fetch-config -m ec2 -s -c "ssm:$ssm_config_path/cloudwatch_agent_config_runner"
 }
 
-refreshenv
-'@
-# Write it to the $profile location
-Set-Content -Path "$PsHome\Microsoft.PowerShell_profile.ps1" -Value $ChocoProfileValue -Force
-# Source it
-. "$PsHome\Microsoft.PowerShell_profile.ps1"
+## Configure docker registries
 
-refreshenv
+$docker_parameters=$(aws ssm get-parameters-by-path --path "/tf-aws-gh-runner/docker" --region "$Region" --query "Parameters[*].{Name:Name,Value:Value}") | ConvertFrom-Json
+echo "Retrieved docker parameters from AWS SSM"
 
-Write-Host "Installing cloudwatch agent..."
-Invoke-WebRequest -Uri https://s3.amazonaws.com/amazoncloudwatch-agent/windows/amd64/latest/amazon-cloudwatch-agent.msi -OutFile C:\amazon-cloudwatch-agent.msi
-$cloudwatchParams = '/i', 'C:\amazon-cloudwatch-agent.msi', '/qn', '/L*v', 'C:\CloudwatchInstall.log'
-Start-Process "msiexec.exe" $cloudwatchParams -Wait -NoNewWindow
-Remove-Item C:\amazon-cloudwatch-agent.msi
+### Docker Registry Proxy
 
-# Install dependent tools
-Write-Host "Installing additional development tools"
-choco install git awscli -y
-refreshenv
+$docker_proxy=$docker_parameters.where( {$_.Name -eq "/tf-aws-gh-runner/docker/proxy_aws_lb_dns_name"} ).value
+echo "Retrieved /tf-aws-gh-runner/docker/proxy_aws_lb_dns_name parameter - ($docker_proxy)"
 
-Write-Host "Creating actions-runner directory for the GH Action installtion"
-New-Item -ItemType Directory -Path C:\actions-runner ; Set-Location C:\actions-runner
+#### Docker Daemon Configuration
+$dockerConfigPath = "C:\ProgramData\Docker\config\daemon.json"
+$dockerConfig = @{
+    'insecure-registries' = @($docker_proxy)
+    'registry-mirrors' = @("http://$docker_proxy")
+}
+$dockerConfig | ConvertTo-Json | Set-Content -Path $dockerConfigPath
 
-Write-Host "Downloading the GH Action runner from ${action_runner_url}"
-Invoke-WebRequest -Uri ${action_runner_url} -OutFile actions-runner.zip
+##### BuildKit Configuration - https://github.com/moby/buildkit/issues/616
+# $buildkitConfigPath = "C:\ProgramData\BuildKit\config\buildkitd.toml"
+# $buildkitConfig = @"
+# insecure-entitlements = [
+#   "network.host",
+#   "security.insecure"
+# ]
+# [registry."docker.io"]
+#   mirrors = [
+#     "$docker_proxy"
+#   ]
+# [registry."$docker_proxy"]
+#   http = true
+#   insecure = true
+# "@
+# $buildkitConfig | Set-Content -Path $buildkitConfigPath
 
-Write-Host "Un-zip action runner"
-Expand-Archive -Path actions-runner.zip -DestinationPath .
+Restart-Service -Name 'com.docker.service'
 
-Write-Host "Delete zip file"
-Remove-Item actions-runner.zip
+### Go Modules Proxy
 
-$action = New-ScheduledTaskAction -WorkingDirectory "C:\actions-runner" -Execute "PowerShell.exe" -Argument "-File C:\start-runner.ps1"
-$trigger = New-ScheduledTaskTrigger -AtStartup
-Register-ScheduledTask -TaskName "runnerinit" -Action $action -Trigger $trigger -User System -RunLevel Highest -Force
+$goproxy=$docker_parameters.where( {$_.Name -eq "/tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name"} ).value
+echo "Retrieved /tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name parameter - ($goproxy)"
 
-C:\ProgramData\Amazon\EC2-Windows\Launch\Scripts\InitializeInstance.ps1 -Schedule
+## Configure the runner
+
+Write-Host "Get GH Runner config from AWS SSM"
+$config = $null
+$i = 0
+do {
+    $config = (aws ssm get-parameters --names "$token_path/$InstanceId" --with-decryption --region $Region  --query "Parameters[*].{Name:Name,Value:Value}" | ConvertFrom-Json)[0].value
+    Write-Host "Waiting for GH Runner config to become available in AWS SSM ($i/30)"
+    Start-Sleep 1
+    $i++
+} while (($null -eq $config) -and ($i -lt 30))
+
+Write-Host "Delete GH Runner token from AWS SSM"
+aws ssm delete-parameter --name "$token_path/$InstanceId" --region $Region
+
+# Create or update user
+if (-not($run_as)) {
+  Write-Host "No user specified, using default ec2-user account"
+  $run_as="ec2-user"
+}
+Add-Type -AssemblyName "System.Web"
+$password = [System.Web.Security.Membership]::GeneratePassword(24, 4)
+$securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+$username = $run_as
+if (!(Get-LocalUser -Name $username -ErrorAction Ignore)) {
+    New-LocalUser -Name $username -Password $securePassword
+    Write-Host "Created new user ($username)"
+}
+else {
+    Set-LocalUser -Name $username -Password $securePassword
+    Write-Host "Changed password for user ($username)"
+}
+# Add user to groups
+foreach ($group in @("Administrators", "docker-users")) {
+    if ((Get-LocalGroup -Name "$group" -ErrorAction Ignore) -and
+        !(Get-LocalGroupMember -Group "$group" -Member $username -ErrorAction Ignore)) {
+        Add-LocalGroupMember -Group "$group" -Member $username
+        Write-Host "Added $username to $group group"
+    }
+}
+
+# Disable User Access Control (UAC)
+# TODO investigate if this is needed or if its overkill - https://github.com/philips-labs/terraform-aws-github-runner/issues/1505
+Set-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -Name ConsentPromptBehaviorAdmin -Value 0 -Force
+Write-Host "Disabled User Access Control (UAC)"
+
+$configCmd = ".\config.cmd --unattended --name $runner_name_prefix$InstanceId --work `"_work`" $config"
+Write-Host "Configure GH Runner as user $run_as"
+Invoke-Expression $configCmd
+
+$jsonBody = @(
+    @{
+        group='Runner Image'
+        detail="AMI id: $ami_id"
+    }
+)
+ConvertTo-Json -InputObject $jsonBody | Set-Content -Path "$pwd\.setup_info"
+
+Write-Host "Starting runner after $(((get-date) - (gcim Win32_OperatingSystem).LastBootUpTime).tostring("hh':'mm':'ss''"))"
+Write-Host "Starting the runner as user $run_as"
+
+if ($agent_mode -eq "ephemeral")
+{
+  $startRunnerServicePath = "C:\start-runner-service.ps1"
+  $startRunnerService = @"
+    Write-Host "Starting the runner in ephemeral mode"
+
+    `$env:GOPROXY = "http://$goproxy,direct"
+
+    `$credentials = New-Object System.Management.Automation.PSCredential ("$username", $securePassword)
+
+    Start-Process -FilePath "run.cmd" -Credential `$credentials -WorkingDirectory "$($pwd.Path)" -Wait
+
+    `$exitCode = `$LASTEXITCODE
+    Write-Host "Runner has finished with `$exitCode exit code"
+
+    # Ideas for further improvements:
+    # - Check if /var/runner-startup.log contains Listening for Jobs
+    # - Check exit code of ./run.sh
+
+    Write-Host "Wait for 30 seconds to ensure all logs are flushed"
+    Start-Sleep -Seconds 30
+
+    Write-Host "Stopping cloudwatch service"
+    & 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1' -a stop
+
+    Write-Host "Terminating instance"
+    aws ec2 terminate-instances --instance-ids "$InstanceId" --region "$Region"
+  "@
+
+  $startRunnerService | Set-Content -Path $startRunnerServicePath
+
+  Start-Job -FilePath "$startRunnerServicePath" -Name "start-runner-service"
+}
+else {
+  Write-Host "Starting the runner in persistent mode"
+  $action = New-ScheduledTaskAction -WorkingDirectory "$pwd" -Execute "run.cmd"
+  $trigger = Get-CimClass "MSFT_TaskRegistrationTrigger" -Namespace "Root/Microsoft/Windows/TaskScheduler"
+  Register-ScheduledTask -TaskName "runnertask" -Action $action -Trigger $trigger -User $username -Password $password -RunLevel Highest -Force
+  Write-Host "Starting the runner in persistent mode"
+}
+
+Stop-Transcript
