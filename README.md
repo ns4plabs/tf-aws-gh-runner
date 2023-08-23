@@ -40,7 +40,8 @@ Follow these simple steps to integrate our runners into your repository:
       ```
     </details>
 2. Make sure to have the [pl-strflt/tf-aws-gh-runner](https://github.com/apps/pl-strflt-tf-aws-gh-runner) GitHub App installed within your organization.
-3. Specify the self-hosted runner in your workflow by setting the `job.runs-on` parameter. For instance, `runs-on: [self-hosted, linux, x64, linux-x64-default]`, `runs-on: [self-hosted, windows, x64, windows-x64-default]`.
+3. Make sure the repository has access to the [`Default` runner group](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/using-self-hosted-runners-in-a-workflow#about-self-hosted-runner-groups) in your organization.
+4. Specify the self-hosted runner in your workflow by setting the `job.runs-on` parameter. For instance, `runs-on: [self-hosted, linux, x64, linux-x64-default]`, `runs-on: [self-hosted, windows, x64, windows-x64-default]`.
 
 #### Concerned about Security?
 
