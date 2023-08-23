@@ -126,6 +126,32 @@ locals {
         snapshot_id           = null
       }]
     }
+    "windows-playground" = {
+      runner_extra_labels = "playground"
+      runner_os = "windows"
+      runner_architecture = "x64"
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
+      instance_types = ["c5.xlarge"]
+      runners_maximum_count = 1
+      instance_target_capacity_type = "on-demand"
+      ami_filter = { name = ["github-runner-windows-core-2022-202308231550-default"], state = ["available"] }
+      ami_owners = ["642361402189"]
+      enable_userdata = false
+      enable_runner_binaries_syncer = false
+      enable_runner_detailed_monitoring = true
+      runner_run_as = "runneradmin"
+      block_device_mappings = [{
+        device_name           = "/dev/sda1"
+        delete_on_termination = true
+        volume_type           = "io2"
+        volume_size           = 100
+        encrypted             = true
+        iops                  = 2500
+        throughput            = null
+        kms_key_id            = null
+        snapshot_id           = null
+      }]
+    }
   }
   legacy_runners = {for k, v in module.runners: k => {
     role_runner_id = v.runners.role_runner.id
