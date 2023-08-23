@@ -134,7 +134,7 @@ locals {
       instance_types = ["c5.xlarge"]
       runners_maximum_count = 1
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-windows-core-2022-202308231550-default"], state = ["available"] }
+      ami_filter = { name = ["github-runner-windows-core-2022-202308231648-default"], state = ["available"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false
@@ -335,25 +335,25 @@ module "runners" {
     {
       "log_group_name" : "user_data",
       "prefix_log_group" : true,
-      "file_path" : "/var/log/user-data.log",
+      "file_path" : each.value.runner_os == "windows" ? "C:/UserData.log" : "/var/log/user-data.log",
       "log_stream_name" : "{instance_id}"
     },
     {
       "log_group_name" : "runner",
       "prefix_log_group" : true,
-      "file_path" : "/home/runner/_diag/Runner_**.log",
+      "file_path" : each.value.runner_os == "windows" ? "C:/actions-runner/_diag/Runner_*.log" : "/home/runner/_diag/Runner_**.log",
       "log_stream_name" : "{instance_id}"
     },
     {
       "log_group_name" : "runner-startup",
       "prefix_log_group" : true,
-      "file_path" : "/var/log/runner-startup.log",
+      "file_path" : each.value.runner_os == "windows" ? "C:/runner-startup.log" : "/var/log/runner-startup.log",
       "log_stream_name" : "{instance_id}"
     },
     {
       "log_group_name" : "worker",
       "prefix_log_group" : true,
-      "file_path" : "/home/runner/_diag/Worker_**.log",
+      "file_path" : each.value.runner_os == "windows" ? "C:/actions-runner/_diag/Worker_*.log" : "/home/runner/_diag/Worker_**.log",
       "log_stream_name" : "{instance_id}"
     }
   ]

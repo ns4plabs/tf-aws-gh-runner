@@ -14,3 +14,4 @@ jobs:
       - run: whoami
       - run: pwd
         shell: bash
+      - run: ls
