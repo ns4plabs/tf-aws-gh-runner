@@ -12,7 +12,7 @@ jobs:
     runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
       - run: |
-          $Regions = "us-east-1"
+          $Region = "us-east-1"
           
           $docker_parameters=$(aws ssm get-parameters-by-path --path "/tf-aws-gh-runner/docker" --region "$Region" --query "Parameters[*].{Name:Name,Value:Value}") | ConvertFrom-Json
           echo "Retrieved docker parameters from AWS SSM"
@@ -30,7 +30,9 @@ jobs:
           $dockerConfig | ConvertTo-Json | Set-Content -Path $dockerConfigPath
           echo "$dockerConfig"
 
-          Restart-Service -Name 'com.docker.service'
+          Get-Service
 
           $goproxy=$docker_parameters.where( {$_.Name -eq "/tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name"} ).value
           echo "Retrieved /tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name parameter - ($goproxy)"
+
+          docker version
