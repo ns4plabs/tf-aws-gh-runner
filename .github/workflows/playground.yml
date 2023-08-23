@@ -11,7 +11,26 @@ jobs:
     name: Play
     runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
-      - run: whoami
-      - run: pwd
-        shell: bash
-      - run: ls
+      - run: |
+          $Regions = "us-east-1"
+          
+          $docker_parameters=$(aws ssm get-parameters-by-path --path "/tf-aws-gh-runner/docker" --region "$Region" --query "Parameters[*].{Name:Name,Value:Value}") | ConvertFrom-Json
+          echo "Retrieved docker parameters from AWS SSM"
+          
+          ### Docker Registry Proxy
+          
+          $docker_proxy=$docker_parameters.where( {$_.Name -eq "/tf-aws-gh-runner/docker/proxy_aws_lb_dns_name"} ).value
+          echo "Retrieved /tf-aws-gh-runner/docker/proxy_aws_lb_dns_name parameter - ($docker_proxy)"
+
+          $dockerConfigPath = "C:\ProgramData\Docker\config\daemon.json"
+          $dockerConfig = @{
+              'insecure-registries' = @($docker_proxy)
+              'registry-mirrors' = @("http://$docker_proxy")
+          }
+          $dockerConfig | ConvertTo-Json | Set-Content -Path $dockerConfigPath
+          echo "$dockerConfig"
+
+          Restart-Service -Name 'com.docker.service'
+
+          $goproxy=$docker_parameters.where( {$_.Name -eq "/tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name"} ).value
+          echo "Retrieved /tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name parameter - ($goproxy)"
