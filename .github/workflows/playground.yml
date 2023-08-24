@@ -48,9 +48,9 @@ jobs:
 
             `$securePassword = ConvertTo-SecureString "$password" -AsPlainText -Force
             `$credentials = New-Object System.Management.Automation.PSCredential ("$username", `$securePassword)
-            Start-Process "powershell.exe" -ArgumentList '-Command', "echo '$($pwd.Path)'" -Wait -NoNewWindow
-            # Start-Process -FilePath "run.cmd" -Credential `$credentials -WorkingDirectory "$($pwd.Path)" -Wait -NoNewWindow
-            `$exitCode = `$LASTEXITCODE
+            `$process = Start-Process "powershell.exe" -ArgumentList '-Command', "echo '$($pwd.Path)'" -Wait -NoNewWindow -PassThru
+            # `$process = Start-Process -FilePath "run.cmd" -Credential `$credentials -WorkingDirectory "$($pwd.Path)" -Wait -NoNewWindow -PassThru
+            `$exitCode = `$process.ExitCode
             Write-Host "Runner has finished with `$exitCode exit code"
             # Ideas for further improvements:
             # - Check if /var/runner-startup.log contains Listening for Jobs
