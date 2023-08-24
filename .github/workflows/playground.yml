@@ -60,6 +60,6 @@ jobs:
           "@
           $startRunnerService | Set-Content -Path $startRunnerServicePath
 
-          Start-Process -FilePath "$startRunnerServicePath" -Wait -NoNewWindow
-          `$exitCode = `$LASTEXITCODE
-          Write-Host "Start has finished with `$exitCode exit code"
+          Start-Process -FilePath "powershell.exe" -ArgumentList "-File $startRunnerServicePath" -Wait -NoNewWindow
+          $exitCode = $LASTEXITCODE
+          Write-Host "Start has finished with $exitCode exit code"
