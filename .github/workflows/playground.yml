@@ -13,7 +13,7 @@ jobs:
     steps:
       - run: |
           $Region = "us-east-1"
-          $password = [System.Web.Security.Membership]::GeneratePassword(24, 4)
+          $password = "password"
           $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
           $username = $env:USERNAME
           
