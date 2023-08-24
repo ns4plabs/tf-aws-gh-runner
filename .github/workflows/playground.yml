@@ -46,6 +46,8 @@ jobs:
           $startRunnerService = @"
             Write-Host "Starting the runner in ephemeral mode"
 
+            env
+
             `$securePassword = ConvertTo-SecureString "$password" -AsPlainText -Force
             `$credentials = New-Object System.Management.Automation.PSCredential ("$username", `$securePassword)
             `$process = Start-Process "powershell.exe" -ArgumentList '-Command', "echo '$($pwd.Path)'" -Wait -NoNewWindow -PassThru
