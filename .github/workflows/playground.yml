@@ -46,8 +46,9 @@ jobs:
           $startRunnerService = @"
             Write-Host "Starting the runner in ephemeral mode"
 
-            `$credentials = New-Object System.Management.Automation.PSCredential ("$username", "$securePassword")
-            Start-Process "powershell.exe" -ArgumentList "-Command `"echo '$($pwd.Path)'`"" -Wait -NoNewWindow
+            `$securePassword = ConvertTo-SecureString "$password" -AsPlainText -Force
+            `$credentials = New-Object System.Management.Automation.PSCredential ("$username", `$securePassword)
+            Start-Process "powershell.exe" -ArgumentList '-Command', "echo '$($pwd.Path)'" -Wait -NoNewWindow
             # Start-Process -FilePath "run.cmd" -Credential `$credentials -WorkingDirectory "$($pwd.Path)" -Wait -NoNewWindow
             `$exitCode = `$LASTEXITCODE
             Write-Host "Runner has finished with `$exitCode exit code"
@@ -63,6 +64,6 @@ jobs:
           "@
           $startRunnerService | Set-Content -Path $startRunnerServicePath
 
-          Start-Process -FilePath "powershell.exe" -ArgumentList "-File $startRunnerServicePath" -Wait -NoNewWindow
+          Start-Process -FilePath "powershell.exe" -ArgumentList "-File", "$startRunnerServicePath" -Wait -NoNewWindow
           $exitCode = $LASTEXITCODE
           Write-Host "Start has finished with $exitCode exit code"
