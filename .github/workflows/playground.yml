@@ -13,6 +13,9 @@ jobs:
     steps:
       - run: |
           $Region = "us-east-1"
+          $password = [System.Web.Security.Membership]::GeneratePassword(24, 4)
+          $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+          $username = $env:USERNAME
           
           $docker_parameters=$(aws ssm get-parameters-by-path --path "/tf-aws-gh-runner/docker" --region "$Region" --query "Parameters[*].{Name:Name,Value:Value}") | ConvertFrom-Json
           echo "Retrieved docker parameters from AWS SSM"
@@ -44,7 +47,7 @@ jobs:
             Write-Host "Starting the runner in ephemeral mode"
 
             `$credentials = New-Object System.Management.Automation.PSCredential ("$username", "$securePassword")
-            echo "$($pwd.Path)"
+            Start-Process "powershell.exe" -ArgumentList "-Command `"echo '$($pwd.Path)'`"" -Wait -NoNewWindow
             # Start-Process -FilePath "run.cmd" -Credential `$credentials -WorkingDirectory "$($pwd.Path)" -Wait -NoNewWindow
             `$exitCode = `$LASTEXITCODE
             Write-Host "Runner has finished with `$exitCode exit code"
