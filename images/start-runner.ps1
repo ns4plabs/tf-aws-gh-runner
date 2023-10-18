@@ -1,5 +1,13 @@
 Start-Transcript -Path "C:\runner-startup.log" -Append
 
+## Create D:\ drive
+Write-Host "Creating D:\ for the GH Action installtion"
+$disk = Get-Disk -Number 0
+$partition = $disk | New-Partition -AssignDriveLetter -UseMaximumSize
+Format-Volume -Partition $partition -FileSystem NTFS
+Copy-Item -Path .\* -Destination D:\ -Recurse -Force -Exclude "C:\runner-startup.log"
+Set-Location -Path "D:\"
+
 ## Retrieve instance metadata
 
 Write-Host  "Retrieving TOKEN from AWS API"
@@ -62,6 +70,47 @@ if ($enable_cloudwatch_agent -eq "true")
     & 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1' -a fetch-config -m ec2 -s -c "ssm:$ssm_config_path/cloudwatch_agent_config_runner"
 }
 
+## Configure docker registries
+$docker_parameters=$(aws ssm get-parameters-by-path --path "/tf-aws-gh-runner/docker" --region "$Region" --query "Parameters[*].{Name:Name,Value:Value}") | ConvertFrom-Json
+echo "Retrieved docker parameters from AWS SSM"
+
+### Docker Registry Proxy
+$docker_proxy=$docker_parameters.where( {$_.Name -eq "/tf-aws-gh-runner/docker/proxy_aws_lb_dns_name"} ).value
+echo "Retrieved /tf-aws-gh-runner/docker/proxy_aws_lb_dns_name parameter - ($docker_proxy)"
+
+#### Docker Daemon Configuration
+$dockerConfigPath = "C:\ProgramData\Docker\config\daemon.json"
+$dockerConfig = @{
+    'insecure-registries' = @($docker_proxy)
+    'registry-mirrors' = @("http://$docker_proxy")
+}
+$dockerConfig | ConvertTo-Json | Set-Content -Path $dockerConfigPath
+
+##### BuildKit Configuration - https://github.com/moby/buildkit/issues/616
+# $buildkitConfigPath = "C:\ProgramData\BuildKit\config\buildkitd.toml"
+# $buildkitConfig = @"
+# insecure-entitlements = [
+#   "network.host",
+#   "security.insecure"
+# ]
+# [registry."docker.io"]
+#   mirrors = [
+#     "$docker_proxy"
+#   ]
+# [registry."$docker_proxy"]
+#   http = true
+#   insecure = true
+# "@
+# $buildkitConfig | Set-Content -Path $buildkitConfigPath
+
+Restart-Service -Name "docker"
+
+### Go Modules Proxy
+
+$goproxy=$docker_parameters.where( {$_.Name -eq "/tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name"} ).value
+echo "Retrieved /tf-aws-gh-runner/docker/goproxy_aws_lb_dns_name parameter - ($goproxy)"
+[Environment]::SetEnvironmentVariable("GOPROXY", "http://$goproxy,direct", "Machine")
+
 ## Configure the runner
 
 Write-Host "Get GH Runner config from AWS SSM"
@@ -108,7 +157,7 @@ foreach ($group in @("Administrators", "docker-users")) {
 Set-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -Name ConsentPromptBehaviorAdmin -Value 0 -Force
 Write-Host "Disabled User Access Control (UAC)"
 
-$configCmd = ".\config.cmd --unattended --name $runner_name_prefix$InstanceId --work `"_work`" $config"
+$configCmd = ".\config.cmd --unattended --name $runner_name_prefix$InstanceId --work `"a`" $config"
 Write-Host "Configure GH Runner as user $run_as"
 Invoke-Expression $configCmd
 
@@ -122,12 +171,48 @@ $jsonBody = @(
 )
 ConvertTo-Json -InputObject $jsonBody | Set-Content -Path "$pwd\.setup_info"
 
-Write-Host  "Installing the runner as a service"
-
-$action = New-ScheduledTaskAction -WorkingDirectory "$pwd" -Execute "run.cmd"
-$trigger = Get-CimClass "MSFT_TaskRegistrationTrigger" -Namespace "Root/Microsoft/Windows/TaskScheduler"
-Register-ScheduledTask -TaskName "runnertask" -Action $action -Trigger $trigger -User $username -Password $password -RunLevel Highest -Force
-Write-Host "Starting the runner in persistent mode"
 Write-Host "Starting runner after $(((get-date) - (gcim Win32_OperatingSystem).LastBootUpTime).tostring("hh':'mm':'ss''"))"
+Write-Host "Starting the runner as user $run_as"
+
+if ($agent_mode -eq "ephemeral")
+{
+  Write-Host "Starting the runner in ephemeral mode"
+
+  $startRunnerServicePath = "C:\start-runner-service.ps1"
+  $startRunnerService = @"
+Start-Transcript -Path "C:\runner-startup.log" -Append
+
+`$process = Start-Process -FilePath "$($pwd.Path)\run.cmd" -WorkingDirectory "$($pwd.Path)" -Wait -NoNewWindow -PassThru
+`$exitCode = `$process.ExitCode
+Write-Host "Runner has finished with `$exitCode exit code"
+
+# Ideas for further improvements:
+# - Check if /var/runner-startup.log contains Listening for Jobs
+# - Check exit code of ./run.sh
+
+Write-Host "Wait for 30 seconds to ensure all logs are flushed"
+Start-Sleep -Seconds 30
+
+Write-Host "Stopping cloudwatch service"
+& 'C:\Program Files\Amazon\AmazonCloudWatchAgent\amazon-cloudwatch-agent-ctl.ps1' -a stop
+
+Write-Host "Terminating instance"
+aws ec2 terminate-instances --instance-ids "$InstanceId" --region "$Region"
+
+Stop-Transcript
+"@
+
+  $startRunnerService | Set-Content -Path $startRunnerServicePath
+
+  $action = New-ScheduledTaskAction -WorkingDirectory "$pwd" -Execute "powershell.exe" -Argument "-File $startRunnerServicePath"
+  Register-ScheduledTask -TaskName "runnertask" -Action $action -User $username -Password $password -RunLevel Highest -Force
+  Start-ScheduledTask -TaskName "runnertask"
+}
+else {
+  Write-Host  "Installing the runner as a service"
+  $action = New-ScheduledTaskAction -WorkingDirectory "$pwd" -Execute "run.cmd"
+  $trigger = Get-CimClass "MSFT_TaskRegistrationTrigger" -Namespace "Root/Microsoft/Windows/TaskScheduler"
+  Register-ScheduledTask -TaskName "runnertask" -Action $action -Trigger $trigger -User $username -Password $password -RunLevel Highest -Force
+}
 
 Stop-Transcript
