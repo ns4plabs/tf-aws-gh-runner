@@ -13,8 +13,10 @@ jobs:
     steps:
       - run: $env:path -split ";"
       - run: echo "C:\Program Files\Git\usr\bin" >> $GITHUB_PATH
+      - run: refreshenv
       - run: $env:path -split ";"
       - run: choco install msys2 powershell-core -y
+      - run: refreshenv
+      - run: $env:path -split ";"
+      - run: ls "C:\Program Files\PowerShell\7"
       - run: ls "C:\tools"
-      - run: ls "C:\tools
-        shell: bash
