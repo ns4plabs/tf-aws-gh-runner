@@ -12,7 +12,11 @@ jobs:
     runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
       - run: $env:path -split ";"
-      - run: ls "C:\Program Files\Git\usr\bin"
-      - run: ls "C:\tools"
-      - run: ls "C:\"
+      - run: |
+          $systemPath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+          $newSystemPath = "$systemPath;C:\Program Files\Git\usr\bin"
+          [System.Environment]::SetEnvironmentVariable("Path", $newSystemPath, "Machine")
       - run: choco install msys2 powershell-core -y
+      - run: ls "C:\"
+      - run: ls "C:\tools
+        shell: bash
