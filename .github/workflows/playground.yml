@@ -22,7 +22,7 @@ jobs:
           refreshenv
           $env:path -split ";"
       - run: echo "hello"
-        shell: bash
+        shell: C:\Program Files\Git\bin\bash.exe
       - run: echo "C:\Program Files\Git\usr\bin" >> $GITHUB_PATH
       - run: refreshenv
       - run: $env:path -split ";"
