@@ -11,5 +11,8 @@ jobs:
     name: Play
     runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
-      - run: ls
-        shell: bash
+      - run: $env:path -split ";"
+      - run: ls "C:\Program Files\Git\usr\bin"
+      - run: ls "C:\tools"
+      - run: ls "C:\"
+      - run: choco install msys2 powershell-core -y
