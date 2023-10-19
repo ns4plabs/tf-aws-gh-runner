@@ -1,12 +1,8 @@
 Start-Transcript -Path "C:\runner-startup.log" -Append
 
-## Create D:\ drive
-Write-Host "Creating D:\ for the GH Action installtion"
-$disk = Get-Disk -Number 0
-$partition = $disk | New-Partition -AssignDriveLetter -UseMaximumSize
-Format-Volume -Partition $partition -FileSystem NTFS
-Copy-Item -Path .\* -Destination D:\ -Recurse -Force -Exclude "C:\runner-startup.log"
-Set-Location -Path "D:\"
+## Grow drive D:/ to max size
+Write-Host "Growing D:\ to max size"
+Resize-Partition -DriveLetter D -Size 0
 
 ## Retrieve instance metadata
 

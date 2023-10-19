@@ -134,7 +134,7 @@ locals {
       instance_types = ["c5.xlarge"]
       runners_maximum_count = 1
       instance_target_capacity_type = "on-demand"
-      ami_filter = { name = ["github-runner-windows-core-2022-202310181537-default"], state = ["available"] }
+      ami_filter = { name = ["github-runner-windows-core-2022-202310191918-default"], state = ["available"] }
       ami_owners = ["642361402189"]
       enable_userdata = false
       enable_runner_binaries_syncer = false

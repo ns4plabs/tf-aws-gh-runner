@@ -30,11 +30,23 @@ Remove-Item C:\amazon-cloudwatch-agent.msi
 
 # Install dependent tools
 Write-Host "Installing additional development tools"
-choco install git awscli -y
+choco install git awscli msys2 powershell-core -y
+
+# Add Git bash to path
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+$newPath = "C:\Program Files\PowerShell\7;C:\Program Files\Git\bin;$currentPath"
+[Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
+
 refreshenv
 
-Write-Host "Creating actions-runner directory for the GH Action installtion"
-New-Item -ItemType Directory -Path C:\actions-runner ; Set-Location C:\actions-runner
+## Create D:\ drive
+Write-Host "Creating D:\ for the GH Action installtion"
+Resize-Partition -DriveLetter C -Size 30GB
+$disk = Get-Disk -Number 0
+$partition = $disk | New-Partition -AssignDriveLetter -UseMaximumSize
+Format-Volume -Partition $partition -FileSystem NTFS
+# Copy-Item -Path .\* -Destination D:\ -Recurse -Force -Exclude "C:\runner-startup.log"
+Set-Location -Path "D:\"
 
 Write-Host "Downloading the GH Action runner from ${action_runner_url}"
 Invoke-WebRequest -Uri ${action_runner_url} -OutFile actions-runner.zip
@@ -45,7 +57,7 @@ Expand-Archive -Path actions-runner.zip -DestinationPath .
 Write-Host "Delete zip file"
 Remove-Item actions-runner.zip
 
-$action = New-ScheduledTaskAction -WorkingDirectory "C:\actions-runner" -Execute "PowerShell.exe" -Argument "-File C:\start-runner.ps1"
+$action = New-ScheduledTaskAction -WorkingDirectory "D:\" -Execute "PowerShell.exe" -Argument "-File C:\start-runner.ps1"
 $trigger = New-ScheduledTaskTrigger -AtStartup
 Register-ScheduledTask -TaskName "runnerinit" -Action $action -Trigger $trigger -User System -RunLevel Highest -Force
 
