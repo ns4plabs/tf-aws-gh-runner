@@ -12,11 +12,11 @@ jobs:
     runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
       - run: |
-          ls C:\Program Files\Git\bin
+          ls "C:\Program Files\Git\bin"
           echo "==="
           $env:path -split ";"
           $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-          $newPath = "C:\Program Files\PowerShell\7;C:\Program Files\Git\bin;$currentPath;"
+          $newPath = "C:\Program Files\Git\bin;$currentPath"
           [Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
           echo "==="
           refreshenv
