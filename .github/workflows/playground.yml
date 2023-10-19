@@ -11,10 +11,4 @@ jobs:
     name: Play
     runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
-      - uses: actions/checkout@v3
-        with:
-          repository: libp2p/go-libp2p
-      - uses: actions/setup-go@v4
-        with:
-          go-version: stable
-      - run: go test -v ./...
+      - run: docker info
