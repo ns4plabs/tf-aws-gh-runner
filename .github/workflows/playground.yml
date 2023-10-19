@@ -6,6 +6,10 @@ on:
     paths:
       - .github/workflows/playground.yml
 
+defaults:
+  run:
+    shell: bash
+    
 jobs:
   playground:
     name: Play
