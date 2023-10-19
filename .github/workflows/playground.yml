@@ -11,23 +11,6 @@ jobs:
     name: Play
     runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
-      - run: |
-          ls "C:\Program Files\Git\bin"
-          echo "==="
-          $env:path -split ";"
-          $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-          $newPath = "C:\Program Files\Git\bin;$currentPath"
-          [Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
-          echo "==="
-          refreshenv
-          $env:path -split ";"
-      - run: echo "hello"
-        shell: C:\Program Files\Git\bin\bash.exe
-      - run: echo "C:\Program Files\Git\usr\bin" >> $GITHUB_PATH
-      - run: refreshenv
-      - run: $env:path -split ";"
-      - run: choco install msys2 powershell-core -y
-      - run: refreshenv
-      - run: $env:path -split ";"
-      - run: ls "C:\Program Files\PowerShell\7"
-      - run: ls "C:\tools"
+      - run: echo ${env:PATH}
+      - run: echo $PATH
+        shell: bash
