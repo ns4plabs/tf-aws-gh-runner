@@ -15,6 +15,8 @@ jobs:
     name: Play
     runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
+      - run: whoami
+      - run: ls -la $GITHUB_PATH
       - run: echo $PATH
       - run: echo "C:/msys64/usr/bin" >> $GITHUB_PATH
       - run: echo $PATH
