@@ -16,7 +16,8 @@ jobs:
           $systemPath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
           $newSystemPath = "$systemPath;C:\Program Files\Git\usr\bin"
           [System.Environment]::SetEnvironmentVariable("Path", $newSystemPath, "Machine")
+      - run: $env:path -split ";"
       - run: choco install msys2 powershell-core -y
-      - run: ls "C:\"
+      - run: ls "C:\tools"
       - run: ls "C:\tools
         shell: bash
