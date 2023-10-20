@@ -100,6 +100,58 @@ locals {
         snapshot_id           = null
       }]
     }
+    "windows-x64-2xlarge" = {
+      runner_extra_labels = "playground"
+      runner_os = "windows"
+      runner_architecture = "x64"
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
+      instance_types = ["c5.2xlarge"]
+      runners_maximum_count = 20
+      instance_target_capacity_type = "on-demand"
+      ami_filter = { name = ["github-runner-windows-core-2022-202310200742-default"], state = ["available"] }
+      ami_owners = ["642361402189"]
+      enable_userdata = false
+      enable_runner_binaries_syncer = false
+      enable_runner_detailed_monitoring = true
+      runner_run_as = "runneradmin"
+      block_device_mappings = [{
+        device_name           = "/dev/sda1"
+        delete_on_termination = true
+        volume_type           = "io2"
+        volume_size           = 100
+        encrypted             = true
+        iops                  = 2500
+        throughput            = null
+        kms_key_id            = null
+        snapshot_id           = null
+      }]
+    }
+    "windows-x64-xlarge" = {
+      runner_extra_labels = "playground"
+      runner_os = "windows"
+      runner_architecture = "x64"
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
+      instance_types = ["c5.xlarge", "m5.xlarge"]
+      runners_maximum_count = 20
+      instance_target_capacity_type = "on-demand"
+      ami_filter = { name = ["github-runner-windows-core-2022-202310200742-default"], state = ["available"] }
+      ami_owners = ["642361402189"]
+      enable_userdata = false
+      enable_runner_binaries_syncer = false
+      enable_runner_detailed_monitoring = true
+      runner_run_as = "runneradmin"
+      block_device_mappings = [{
+        device_name           = "/dev/sda1"
+        delete_on_termination = true
+        volume_type           = "gp3"
+        volume_size           = 100
+        encrypted             = true
+        iops                  = null
+        throughput            = null
+        kms_key_id            = null
+        snapshot_id           = null
+      }]
+    }
     "playground" = {
       runner_extra_labels = "playground"
       runner_os = "linux"
@@ -114,6 +166,32 @@ locals {
       enable_runner_binaries_syncer = false
       enable_runner_detailed_monitoring = true
       runner_run_as = "runner"
+      block_device_mappings = [{
+        device_name           = "/dev/sda1"
+        delete_on_termination = true
+        volume_type           = "io2"
+        volume_size           = 100
+        encrypted             = true
+        iops                  = 2500
+        throughput            = null
+        kms_key_id            = null
+        snapshot_id           = null
+      }]
+    }
+    "windows-playground" = {
+      runner_extra_labels = "playground"
+      runner_os = "windows"
+      runner_architecture = "x64"
+      repository_white_list = ["pl-strflt/tf-aws-gh-runner"]
+      instance_types = ["c5.xlarge"]
+      runners_maximum_count = 1
+      instance_target_capacity_type = "on-demand"
+      ami_filter = { name = ["github-runner-windows-core-2022-202310200742-default"], state = ["available"] }
+      ami_owners = ["642361402189"]
+      enable_userdata = false
+      enable_runner_binaries_syncer = false
+      enable_runner_detailed_monitoring = true
+      runner_run_as = "runneradmin"
       block_device_mappings = [{
         device_name           = "/dev/sda1"
         delete_on_termination = true
@@ -309,25 +387,25 @@ module "runners" {
     {
       "log_group_name" : "user_data",
       "prefix_log_group" : true,
-      "file_path" : "/var/log/user-data.log",
+      "file_path" : each.value.runner_os == "windows" ? "C:/UserData.log" : "/var/log/user-data.log",
       "log_stream_name" : "{instance_id}"
     },
     {
       "log_group_name" : "runner",
       "prefix_log_group" : true,
-      "file_path" : "/home/runner/_diag/Runner_**.log",
+      "file_path" : each.value.runner_os == "windows" ? "D:/_diag/Runner_*.log" : "/home/runner/_diag/Runner_**.log",
       "log_stream_name" : "{instance_id}"
     },
     {
       "log_group_name" : "runner-startup",
       "prefix_log_group" : true,
-      "file_path" : "/var/log/runner-startup.log",
+      "file_path" : each.value.runner_os == "windows" ? "C:/runner-startup.log" : "/var/log/runner-startup.log",
       "log_stream_name" : "{instance_id}"
     },
     {
       "log_group_name" : "worker",
       "prefix_log_group" : true,
-      "file_path" : "/home/runner/_diag/Worker_**.log",
+      "file_path" : each.value.runner_os == "windows" ? "D:/_diag/Worker_*.log" : "/home/runner/_diag/Worker_**.log",
       "log_stream_name" : "{instance_id}"
     }
   ]

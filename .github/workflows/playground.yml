@@ -5,15 +5,22 @@ on:
   push:
     paths:
       - .github/workflows/playground.yml
-
+    
 jobs:
   playground:
     name: Play
-    runs-on: ["self-hosted", "linux", "x64", "playground"]
+    runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
-      - env:
-          HELLO: World!
-        run: echo "Hello" "$HELLO"
+      - run: echo $PATH
         shell: bash
-      - run: sleep 600
+      - run: echo "C:/msys64/usr/bin" >> $GITHUB_PATH
         shell: bash
+      - run: echo $PATH
+        shell: bash
+      - run: ls C:/msys64
+        shell: bash
+      - run: ls C:/msys64/usr
+        shell: bash
+      - run: ls C:/msys64/usr/bin
+        shell: bash
+      
