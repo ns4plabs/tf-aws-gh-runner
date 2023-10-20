@@ -6,20 +6,6 @@ $VerbosePreference = "Continue"
 $env:chocolateyUseWindowsCompression = 'true'
 Invoke-WebRequest https://chocolatey.org/install.ps1 -UseBasicParsing | Invoke-Expression
 
-# Add Chocolatey to powershell profile
-$ChocoProfileValue = @'
-$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-if (Test-Path($ChocolateyProfile)) {
-  Import-Module "$ChocolateyProfile"
-}
-
-refreshenv
-'@
-# Write it to the $profile location
-Set-Content -Path "$PsHome\Microsoft.PowerShell_profile.ps1" -Value $ChocoProfileValue -Force
-# Source it
-. "$PsHome\Microsoft.PowerShell_profile.ps1"
-
 refreshenv
 
 Write-Host "Installing cloudwatch agent..."
@@ -30,7 +16,8 @@ Remove-Item C:\amazon-cloudwatch-agent.msi
 
 # Install dependent tools
 Write-Host "Installing additional development tools"
-choco install git awscli msys2 powershell-core -y
+choco install git awscli powershell-core -y
+choco install msys2 --params "/InstallDir:C:\msys64" -y
 
 # Add Git bash to path
 $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
