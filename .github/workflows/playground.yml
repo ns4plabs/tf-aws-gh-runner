@@ -11,14 +11,16 @@ jobs:
     name: Play
     runs-on: ["self-hosted", "windows", "x64", "playground"]
     steps:
-      - run: whoami /priv
-      - run: whoami /all
-      - run: |
-          PATH="C:/msys64/usr/bin;$PATH"
-          echo "$PATH"
-          echo "C:/msys64/usr/bin" >> $GITHUB_PATH
-          cat $GITHUB_PATH
+      - run: echo $PATH
         shell: bash
-      - run: cat $GITHUB_PATH
+      - run: echo "C:/msys64/usr/bin" >> $GITHUB_PATH
+        shell: bash
+      - run: echo $PATH
+        shell: bash
+      - run: ls C:/msys64
+        shell: bash
+      - run: ls C:/msys64/usr
+        shell: bash
+      - run: ls C:/msys64/usr/bin
         shell: bash
       
