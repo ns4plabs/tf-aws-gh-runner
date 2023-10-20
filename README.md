@@ -10,14 +10,16 @@ Leveraging the power of [terraform-aws-github-runner](https://github.com/philips
 
 ## Table of Runner Types
 
-We provide a variety of self-hosted runner configurations. Choose the one that best suits your project's needs:
+We provide a variety of self-hosted runner configurations. Choose the one that best suits your project's needs (each runner is labelled with `size`, `OS` and `architecture`):
 
-| Name | OS | Architecture | Instance Type | AMI |
+| Size | OS | Architecture | Instance Type | AMI |
 | --- | --- | --- | --- | --- |
-| 4xlarge | linux | x64 | [c5.4xlarge](https://instances.vantage.sh/?selected=c5.4xlarge) | `github-runner-ubuntu-jammy-amd64-202304281501-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
-| 2xlarge | linux | x64 | [c5.2xlarge](https://instances.vantage.sh/?selected=c5.2xlarge) | `github-runner-ubuntu-jammy-amd64-202304281501-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
-| xlarge | linux | x64 | [c5.xlarge](https://instances.vantage.sh/?selected=c5.xlarge) or [m5.xlarge](https://instances.vantage.sh/?selected=m5.xlarge) | `github-runner-ubuntu-jammy-amd64-202304281501-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
-| large | linux | x64 | [c5.large](https://instances.vantage.sh/?selected=c5.large) or [m5.large](https://instances.vantage.sh/?selected=m5.large) | `github-runner-ubuntu-jammy-amd64-202304281501-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
+| 4xlarge | linux | x64 | [c5.4xlarge](https://instances.vantage.sh/?selected=c5.4xlarge) | `github-runner-ubuntu-jammy-amd64-202307110949-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
+| 2xlarge | linux | x64 | [c5.2xlarge](https://instances.vantage.sh/?selected=c5.2xlarge) | `github-runner-ubuntu-jammy-amd64-202307110949-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
+| xlarge | linux | x64 | [c5.xlarge](https://instances.vantage.sh/?selected=c5.xlarge) or [m5.xlarge](https://instances.vantage.sh/?selected=m5.xlarge) | `github-runner-ubuntu-jammy-amd64-202307110949-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
+| large | linux | x64 | [c5.large](https://instances.vantage.sh/?selected=c5.large) or [m5.large](https://instances.vantage.sh/?selected=m5.large) | `github-runner-ubuntu-jammy-amd64-202307110949-default` built with [default.pkrvars](images/ubuntu-jammy/default.pkrvars.hcl) |
+| 2xlarge | windows | x64 | [c5.2xlarge](https://instances.vantage.sh/?selected=c5.2xlarge) | `github-runner-windows-core-2022-202310200742-default` built with [default.pkrvars](images/windows-server-2022/default.pkrvars.hcl) |
+| xlarge | windows | x64 | [c5.xlarge](https://instances.vantage.sh/?selected=c5.xlarge) or [m5.xlarge](https://instances.vantage.sh/?selected=m5.xlarge) | `github-runner-windows-core-2022-202310200742-default` built with [default.pkrvars](images/windows-server-2022/default.pkrvars.hcl) |
 
 ## Getting Started
 
