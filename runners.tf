@@ -370,7 +370,8 @@ module "runners" {
     "libp2p/rust-libp2p",
     "libp2p/test-plans",
     "pl-strflt/tf-aws-gh-runner",
-    "quic-go/quic-go"
+    "quic-go/quic-go",
+    "protocol/badbits.dwebops.pub"
   ])
 
   logging_retention_in_days = 30
